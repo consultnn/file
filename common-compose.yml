@@ -1,0 +1,19 @@
+version: '2'
+services:
+  nginx:
+    image: nginx:1.9.6
+    volumes:
+    - ./project:/www
+    - ./docker/nginx/conf.d:/etc/nginx/conf.d
+    ports:
+    - "8212:80"
+    environment:
+    - TZ=Europe/Moscow
+  php:
+    build: ./docker/php/build
+    volumes:
+    - ./project:/www:rw
+    - ./docker/php/php-fpm.conf:/usr/local/etc/php-fpm.conf
+    working_dir: /www/
+    environment:
+    - ICU_DATA=/opt/icu/

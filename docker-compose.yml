@@ -1,0 +1,14 @@
+version: '2'
+services:
+  nginx:
+    extends:
+      file: common-compose.yml
+      service: nginx
+    depends_on:
+    - php
+  php:
+    extends:
+      file: common-compose.yml
+      service: php
+    volumes:
+    - ./docker/php/dev/php.ini:/usr/local/etc/php/php.ini

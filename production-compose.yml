@@ -1,0 +1,26 @@
+version: '2'
+services:
+  nginx:
+    extends:
+      file: common-compose.yml
+      service: nginx
+    logging:
+      driver: "syslog"
+      options:
+        syslog-facility: "local0"
+        syslog-tag: "formula-sport/nginx"
+    depends_on:
+    - php
+    restart: always
+  php:
+    extends:
+      file: common-compose.yml
+      service: php
+    logging:
+      driver: "syslog"
+      options:
+        syslog-facility: "local0"
+        syslog-tag: "formula-sport/php"
+    restart: always
+    volumes:
+    - ./docker/php/prod/php.ini:/usr/local/etc/php/php.ini
