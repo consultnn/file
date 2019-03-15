@@ -4,13 +4,7 @@ namespace middlewares;
 
 use components\Image;
 use helpers\FileHelper;
-use Imagine\Filter\Transformation;
-use Imagine\Image\Box;
-use Imagine\Image\Color;
-use Imagine\Image\ImageInterface;
-use Imagine\Image\Point;
-use Imagine\Imagick\Font;
-use Imagine\Imagick\Imagine;
+use Psr\Container\ContainerInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -21,7 +15,7 @@ class FileMiddleware implements RequestHandlerInterface
     private $response;
     private $settings;
 
-    public function __construct($container)
+    public function __construct(ContainerInterface $container)
     {
         $this->settings = $container->get('settings');
         $this->response = new Response();
@@ -57,9 +51,10 @@ class FileMiddleware implements RequestHandlerInterface
 
         $physicalExtension = FileHelper::getPhysicalExtension($physicalPath);
         $saveName = ($translit ? $translit : $file . $params) . '.' . $extension;
-
+        $saveName = $file . '_' . $hash . $params . '.' . $extension;
         if (in_array($extension, ['jpg', 'jpeg', 'png', 'gif'])
             && in_array($physicalExtension, ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'pdf'])) {
+
             $params = FileHelper::internalDecodeParams($params);
 
             if ((count($params) == 0) || ((count($params) == 1) && (isset($params['wm'])) && ($params['wm'] == '0'))) {
@@ -76,12 +71,12 @@ class FileMiddleware implements RequestHandlerInterface
             $paths = explode('.', $filePath);
             $image = new Image($params);
             $image->path = $physicalPath;
-            $image->savePath = "/www/web/cache/{$paths[0]}_{$hash}.{$extension}";
+            $image->saveName = "/www/web/{$saveName}";
             $image->project = $project;
             if (empty($image->format)) {
                 $image->format = $extension;
             }
-            $image->generateImage();
+            $image->show();
             return $this->response;
         } elseif ($extension == $physicalExtension) {
             readfile($physicalPath);

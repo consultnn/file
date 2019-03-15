@@ -14,7 +14,7 @@ class FileHelper
     public static function internalHash($filePath, $params, $token)
     {
         $hash = hash('crc32', $token . $filePath . $params . $token);
-
+//var_dump(str_pad(self::internalBaseConvert($hash, 16, 36), 5, '0', STR_PAD_LEFT));die();
         return str_pad(self::internalBaseConvert($hash, 16, 36), 5, '0', STR_PAD_LEFT);
     }
 
@@ -34,15 +34,6 @@ class FileHelper
     public static function makePath($hash, $project, $extension)
     {
         $nameParts = self::splitNameIntoParts($hash);
-
-        $pathPrefix = $project . '/' . implode('/', $nameParts);
-
-        return $pathPrefix . '.' . $extension;
-    }
-
-    public static function makeSavedPath($name, $project, $extension)
-    {
-        $nameParts = self::splitNameIntoParts($name);
 
         $pathPrefix = $project . '/' . implode('/', $nameParts);
 
@@ -184,10 +175,5 @@ class FileHelper
         }
 
         return $result;
-    }
-
-    private static function getSettings()
-    {
-
     }
 }

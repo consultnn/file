@@ -6,7 +6,8 @@ use Imagine\Filter\Basic\Autorotate;
 use Imagine\Filter\Transformation;
 use Imagine\Image\Box;
 use Imagine\Image\ImageInterface;
-use Imagine\Image\Metadata\ExifMetadataReader;
+use Imagine\Image\Point;
+use Imagine\Image\PointInterface;
 use Imagine\Imagick\Imagine;
 use traits\WatermarkTrait;
 
@@ -22,10 +23,10 @@ class Image
     public $image;
     public $width;
     public $height;
-    public $thumbnailMode;
     public $saveName;
     public $savePath;
     public $quality;
+    public $crop = false;
     public $path;
     public $format;
     public $watermark;
@@ -43,12 +44,21 @@ class Image
     {
         $imagine = new Imagine();
         $transformation = new Transformation;
-        $this->image = $imagine->open($this->path);
+        $wm = false;
+        if (empty($this->image)) {
+            $this->image =  $imagine->open($this->path);
+            $wm = true;
+        }
 
         if (!empty($this->width) || !empty($this->height)) {
             $box = new Box(($this->width ?? $this->height), ($this->height ?? $this->width));
 
-            $transformation->thumbnail($box, $this->thumbnailMode);
+            $transformation->thumbnail($box, ImageInterface::THUMBNAIL_OUTBOUND);
+//            if ($this->crop) {
+//                $x = $this->image->getSize()->getWidth() / 2 - $this->width / 2;
+//                $y = $this->image->getSize()->getHeight() / 2 - $this->height / 2;
+//                $transformation->crop(new Point($x, $y), $box);
+//            }
             $this->image = $transformation->apply($this->image);
         }
 
@@ -57,10 +67,22 @@ class Image
             $autorotate->getTransformations($this->image);
             $this->image = $autorotate->apply($this->image);
         }
+        if ($wm) {
+            $this->image = $this->generateWatermark($this->image);
+        }
 
+        return $this->image;
+    }
+
+    public function show()
+    {
         $options = $this->getQualityOptions($this->format, $this->quality);
-        $this->image = $this->generateWatermark($this->image);
-        $this->image->save($this->savePath)->show($this->format, $options);
+        $image = $this->generateImage();
+
+        if ($this->saveName) {
+            $image->save($this->saveName, $options);
+        }
+        return $image->show($this->format, $options);
     }
 
     /**
@@ -96,7 +118,6 @@ class Image
         $heightKey = array_intersect($heightParams, array_keys($this->params));
         $this->height = !empty($heightKey) ? $this->params[reset($heightKey)] : null;
 
-        $this->thumbnailMode = isset($this->params['zc']) ? ImageInterface::THUMBNAIL_OUTBOUND : ImageInterface::THUMBNAIL_INSET;
         $this->format = isset($this->params['f']) ? $this->params['f'] : null;
         $this->quality = isset($this->params['q']) ? (int)$this->params['q'] : 85;
         $this->watermark = isset($this->params['wm']) ? $this->params['wm'] : null;

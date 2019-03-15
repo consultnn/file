@@ -5,6 +5,7 @@ services:
     volumes:
     - ./project:/www
     - ./docker/nginx/conf.d:/etc/nginx/conf.d
+    - ./docker/var/log:/etc/nginx/logs
     ports:
     - "8212:80"
     environment:
