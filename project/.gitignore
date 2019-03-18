@@ -1,1 +1,4 @@
 /vendor
+/composer
+/runtime
+/web/cache
