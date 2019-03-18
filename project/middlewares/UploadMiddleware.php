@@ -4,9 +4,9 @@ namespace middlewares;
 
 use components\Image;
 use helpers\FileHelper;
+use Imagick;
 use Imagine\File\Loader;
 use Imagine\Imagick\Imagine;
-use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
@@ -20,8 +20,8 @@ class UploadMiddleware implements RequestHandlerInterface
     private $project;
     private $params;
 
-    public function __construct(ContainerInterface $container) {
-        $this->settings = $container->get('settings');
+    public function __construct($settings) {
+        $this->settings = $settings;
         $this->response = new Response();
     }
     /**
@@ -40,7 +40,14 @@ class UploadMiddleware implements RequestHandlerInterface
         $files = [];
 
         foreach ($request->getUploadedFiles() as $uploadedName => $uploadedFile) {
-            $files[] = $this->saveFile($uploadedFile);
+            $webPath = $this->saveFile($uploadedFile);
+            $files[] = $webPath;
+            if ($request->getQueryParams()['split_pdf']) {
+                list($firstDir, $secondDir, $storageName) = FileHelper::splitNameIntoParts($webPath);
+
+                $filePath = implode(DIRECTORY_SEPARATOR, [$this->project, $firstDir, $secondDir, $storageName]);
+                $this->run(FileHelper::resolvePhysicalPath($filePath), $request->getQueryParams()['token']);
+            }
         }
 
         if (isset($request->getParsedBody()['urls'])) {
@@ -96,10 +103,7 @@ class UploadMiddleware implements RequestHandlerInterface
             unlink($tempFile);
             return $webPath;
         }
-
-        if (!is_dir($storageDir))
-            mkdir($storageDir, 0775, true);
-
+        FileHelper::checkDir($storageDir);
         rename($tempFile, $physicalPath);
 
         return $webPath;
@@ -132,11 +136,7 @@ class UploadMiddleware implements RequestHandlerInterface
         if (is_file($physicalPath)) {
             return $webPath;
         }
-
-        if (!is_dir($storageDir)) {
-            mkdir($storageDir, 0775, true);
-        }
-
+        FileHelper::checkDir($storageDir);
         move_uploaded_file($uploadedFile->file, $physicalPath);
 
         return $webPath;
@@ -155,10 +155,7 @@ class UploadMiddleware implements RequestHandlerInterface
             unlink($tempFile);
             return $webPath;
         }
-
-        if (!is_dir($storageDir)) {
-            mkdir($storageDir, 0775, true);
-        }
+        FileHelper::checkDir($storageDir);
         rename($tempFile, $physicalPath);
 
         return $webPath;
@@ -182,7 +179,8 @@ class UploadMiddleware implements RequestHandlerInterface
     /**
      * Make file info for save
      *
-     * @param string $fileName
+     * @param string $sha
+     * @param string $extension
      * @return array
      */
     private function makePathData($sha, $extension)
@@ -214,5 +212,33 @@ class UploadMiddleware implements RequestHandlerInterface
             $fileAbsolutePath,
             $fileDirPath
         ];
+    }
+
+    public function run($uploadedFilePath, $token)
+    {
+        $statusPath = RUNTIME_DIR . DIRECTORY_SEPARATOR;
+        $tmpDir = $statusPath . microtime(true) . '_' . uniqid() . DIRECTORY_SEPARATOR;
+
+        mkdir($tmpDir);
+        $imagick = new Imagick();
+        $imagick->readImage($uploadedFilePath);
+        $imagick->writeImages($tmpDir . 'converted.jpg', true);
+
+        $imageNames = array_diff(scandir($tmpDir), ['.', '..']);
+        $images = [];
+        foreach ($imageNames as $image) {
+            $imagePath = $tmpDir.$image;
+            $sha = sha1_file($imagePath);
+
+            list($webPath, $physicalPath, $storageDir) = self::makePathData($sha, 'jpg');
+
+            FileHelper::checkDir($storageDir . '/');
+
+            rename($imagePath, $physicalPath);
+
+            $images[]['filename'] = $webPath;
+        }
+        rmdir($tmpDir);
+        file_put_contents($statusPath.'pdf-images-'.$token, json_encode(['status' => 'ready', 'images' => $images]));
     }
 }

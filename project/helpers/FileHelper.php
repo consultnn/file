@@ -26,18 +26,29 @@ class FileHelper
     /**
      * Make a path relative to the storage
      *
-     * @param string $hash
+     * @param string $fileName
      * @param string $project
-     * @param string $extension
      * @return string
      */
-    public static function makePath($hash, $project, $extension)
+    public static function makePath($fileName, $project)
     {
-        $nameParts = self::splitNameIntoParts($hash);
+        $nameParts = self::splitNameIntoParts($fileName);
 
-        $pathPrefix = $project . '/' . implode('/', $nameParts);
+        return $project . DIRECTORY_SEPARATOR . implode(DIRECTORY_SEPARATOR, $nameParts);
+    }
 
-        return $pathPrefix . '.' . $extension;
+    public static function makeCachePath($filePath, $extension, $hash, $params)
+    {
+        $paths = explode(DIRECTORY_SEPARATOR, $filePath);
+        $keyName = count($paths) - 1;
+        $saveName = $paths[$keyName] . "_{$hash}{$params}.{$extension}";
+        unset($paths[$keyName]);
+        $path = implode(DIRECTORY_SEPARATOR, $paths);
+        return [
+            CACHE_DIR . DIRECTORY_SEPARATOR . $path,
+            CACHE_DIR . DIRECTORY_SEPARATOR . "{$filePath}_{$hash}{$params}.{$extension}",
+            $saveName
+        ];
     }
 
     /**
@@ -47,12 +58,12 @@ class FileHelper
      */
     public static function resolvePhysicalPath($webPath)
     {
-        $storagePath = STORAGE_DIR . '/';
+        $storagePath = STORAGE_DIR . DIRECTORY_SEPARATOR;
         if (is_file($storagePath . $webPath))
             return $storagePath . $webPath;
 
         $pathInfo = pathinfo($webPath);
-        $template = implode('/', [$storagePath, $pathInfo['dirname'], $pathInfo['filename']]);
+        $template = implode(DIRECTORY_SEPARATOR, [$storagePath, $pathInfo['dirname'], $pathInfo['filename']]);
         $glob = glob($template . ".*");
         return $glob ? reset($glob) : false;
     }
@@ -93,7 +104,7 @@ class FileHelper
         $imageInfo = getimagesize($filePath);
 
         if (isset($imageInfo['mime'])) {
-            $extension = explode('/', $imageInfo['mime'])[1];
+            $extension = explode(DIRECTORY_SEPARATOR, $imageInfo['mime'])[1];
 
             return $extension == 'jpeg' ? 'jpg' : $extension;
         }
@@ -110,7 +121,7 @@ class FileHelper
         if ($mime) {
             $mime = explode(';', $mime)[0];
 
-            return explode('/', $mime)[1];
+            return explode(DIRECTORY_SEPARATOR, $mime)[1];
         }
 
         return null;
@@ -138,18 +149,15 @@ class FileHelper
 
     /**
     * @param string $file
-    * @return null|string
+    * @return string
     */
     public static function getMimeTypeByExtension($file)
     {
-        if (($ext = pathinfo($file, PATHINFO_EXTENSION)) !== '') {
-            $ext = strtolower($ext);
-            if (isset(self::getMimeTypes()[$ext])) {
-                return self::getMimeTypes()[$ext];
-            }
+        $extension = self::getPhysicalExtension($file);
+        if ($extension !== '' && isset(self::getMimeTypes()[$extension])) {
+            return self::getMimeTypes()[$extension];
         }
-
-        return null;
+        return 'text/plain';
     }
 
     public static function getPhysicalExtension($path)
@@ -159,21 +167,25 @@ class FileHelper
 
     public static function internalDecodeParams($paramString)
     {
-        $result = array();
-        if (preg_match_all('/_(?:([a-z]{1,4})\-([a-z\d\|\*\.]+))+/i', $paramString, $matches))
-        {
-            foreach ($matches[1] as $idx => $paramName)
-            {
+        $result = [];
+        if (preg_match_all('/_(?:([a-z]{1,4})\-([a-z\d\|\*\.]+))+/i', $paramString, $matches)) {
+            foreach ($matches[1] as $idx => $paramName) {
                 $result[$paramName] = $matches[2][$idx];
             }
         }
 
-        if (isset($result['b']))
-        {
+        if (isset($result['b'])) {
             $result['w'] = $result['h'] = $result['b'];
             unset($result['b']);
         }
 
         return $result;
+    }
+
+    public static function checkDir($dir)
+    {
+        if (!is_dir($dir)) {
+            mkdir($dir, 0755, true);
+        }
     }
 }

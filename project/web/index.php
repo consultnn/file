@@ -1,6 +1,8 @@
 <?php
 
 define('STORAGE_DIR', dirname(__DIR__) . '/storage');
+define('RUNTIME_DIR', dirname(__DIR__) . '/runtime');
+define('CACHE_DIR', dirname(__DIR__) . '/web/cache');
 
 if (PHP_SAPI == 'cli-server') {
     // To help the built-in PHP dev server, check if the request was actually for

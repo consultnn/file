@@ -4,7 +4,6 @@ namespace middlewares;
 
 use components\Image;
 use helpers\FileHelper;
-use Psr\Container\ContainerInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -15,9 +14,9 @@ class FileMiddleware implements RequestHandlerInterface
     private $response;
     private $settings;
 
-    public function __construct(ContainerInterface $container)
+    public function __construct($settings)
     {
-        $this->settings = $container->get('settings');
+        $this->settings = $settings;
         $this->response = new Response();
     }
 
@@ -42,7 +41,7 @@ class FileMiddleware implements RequestHandlerInterface
             return $this->response->withStatus(400);
         }
 
-        $filePath = FileHelper::makePath($file, $project, $extension);
+        $filePath = FileHelper::makePath($file, $project);
         $physicalPath = FileHelper::resolvePhysicalPath($filePath);
 
         if (!$physicalPath || !is_file($physicalPath)) {
@@ -50,15 +49,14 @@ class FileMiddleware implements RequestHandlerInterface
         }
 
         $physicalExtension = FileHelper::getPhysicalExtension($physicalPath);
-        $saveName = ($translit ? $translit : $file . $params) . '.' . $extension;
-        $saveName = $file . '_' . $hash . $params . '.' . $extension;
+        list($saveDir, $fullPath, $saveName) = FileHelper::makeCachePath($filePath, $extension, $hash, $params);
         if (in_array($extension, ['jpg', 'jpeg', 'png', 'gif'])
             && in_array($physicalExtension, ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'pdf'])) {
 
             $params = FileHelper::internalDecodeParams($params);
 
-            if ((count($params) == 0) || ((count($params) == 1) && (isset($params['wm'])) && ($params['wm'] == '0'))) {
-                $mimeType = FileHelper::getMimeTypeByExtension($saveName) ?? 'text/plain';
+            if ((count($params) == 0) || (count($params) == 0 && (isset($params['wm'])) && ($params['wm'] == '0'))) {
+                $mimeType = FileHelper::getMimeTypeByExtension($saveName);
 
                 readfile($physicalPath);
 
@@ -68,10 +66,12 @@ class FileMiddleware implements RequestHandlerInterface
                     ->withHeader('Content-Length', filesize($physicalPath))
                     ->withHeader('Content-Type', $mimeType);
             }
-            $paths = explode('.', $filePath);
+
+            FileHelper::checkDir($saveDir);
+
             $image = new Image($params);
             $image->path = $physicalPath;
-            $image->saveName = "/www/web/{$saveName}";
+            $image->savePath = $fullPath;
             $image->project = $project;
             if (empty($image->format)) {
                 $image->format = $extension;
@@ -82,7 +82,6 @@ class FileMiddleware implements RequestHandlerInterface
             readfile($physicalPath);
             return $this->response
                 ->withHeader('Content-Transfer-Encoding', 'Binary')
-                ->withHeader('Content-Length', filesize($physicalPath))
                 ->withHeader('Content-Disposition', "attachment; filename='{$saveName}'")
                 ->withHeader('Content-Type', 'application/pdf');
         }

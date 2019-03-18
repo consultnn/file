@@ -7,5 +7,3 @@ $container = $app->getContainer();
 $container['callableResolver'] = function ($container) {
     return new CallableResolver($container);
 };
-
-

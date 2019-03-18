@@ -6,8 +6,6 @@ use Imagine\Filter\Basic\Autorotate;
 use Imagine\Filter\Transformation;
 use Imagine\Image\Box;
 use Imagine\Image\ImageInterface;
-use Imagine\Image\Point;
-use Imagine\Image\PointInterface;
 use Imagine\Imagick\Imagine;
 use traits\WatermarkTrait;
 
@@ -23,7 +21,6 @@ class Image
     public $image;
     public $width;
     public $height;
-    public $saveName;
     public $savePath;
     public $quality;
     public $crop = false;
@@ -54,11 +51,6 @@ class Image
             $box = new Box(($this->width ?? $this->height), ($this->height ?? $this->width));
 
             $transformation->thumbnail($box, ImageInterface::THUMBNAIL_OUTBOUND);
-//            if ($this->crop) {
-//                $x = $this->image->getSize()->getWidth() / 2 - $this->width / 2;
-//                $y = $this->image->getSize()->getHeight() / 2 - $this->height / 2;
-//                $transformation->crop(new Point($x, $y), $box);
-//            }
             $this->image = $transformation->apply($this->image);
         }
 
@@ -79,8 +71,8 @@ class Image
         $options = $this->getQualityOptions($this->format, $this->quality);
         $image = $this->generateImage();
 
-        if ($this->saveName) {
-            $image->save($this->saveName, $options);
+        if ($this->savePath) {
+            $image->save($this->savePath, $options);
         }
         return $image->show($this->format, $options);
     }
