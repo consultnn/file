@@ -1,8 +1,8 @@
 <?php
 
-define('STORAGE_DIR', dirname(__DIR__) . '/storage');
-define('RUNTIME_DIR', dirname(__DIR__) . '/runtime');
-define('CACHE_DIR', dirname(__DIR__) . '/web/cache');
+define('STORAGE_DIR', dirname(__DIR__) . '/storage/');
+define('RUNTIME_DIR', dirname(__DIR__) . '/runtime/');
+define('CACHE_DIR', dirname(__DIR__) . '/web/cache/');
 
 if (PHP_SAPI == 'cli-server') {
     // To help the built-in PHP dev server, check if the request was actually for
@@ -15,8 +15,6 @@ if (PHP_SAPI == 'cli-server') {
 }
 
 require __DIR__ . '/../vendor/autoload.php';
-
-session_start();
 
 $settings = require __DIR__ . '/../src/settings.php';
 $app = new \Slim\App($settings);

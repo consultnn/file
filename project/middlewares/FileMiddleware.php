@@ -4,6 +4,7 @@ namespace middlewares;
 
 use components\Image;
 use helpers\FileHelper;
+use helpers\PathHelper;
 use Psr\Http\Server\RequestHandlerInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -33,7 +34,6 @@ class FileMiddleware implements RequestHandlerInterface
         $file = $request->getAttribute('file');
         $hash = $request->getAttribute('hash');
         $params = $request->getAttribute('params');
-        $translit = $request->getAttribute('translit');
         $extension = strtolower($request->getAttribute('extension'));
         $hashPath = $file . '.' . $extension;
 
@@ -41,33 +41,30 @@ class FileMiddleware implements RequestHandlerInterface
             return $this->response->withStatus(400);
         }
 
-        $filePath = FileHelper::makePath($file, $project);
-        $physicalPath = FileHelper::resolvePhysicalPath($filePath);
+        $filePath = PathHelper::makePath($file, $project);
+        $physicalPath = PathHelper::resolvePhysicalPath($filePath);
 
         if (!$physicalPath || !is_file($physicalPath)) {
             return $this->response->withStatus(404);
         }
 
         $physicalExtension = FileHelper::getPhysicalExtension($physicalPath);
-        list($saveDir, $fullPath, $saveName) = FileHelper::makeCachePath($filePath, $extension, $hash, $params);
+        list($saveDir, $fullPath, $saveName) = PathHelper::makeCachePath($filePath, $extension, $hash, $params);
         if (in_array($extension, ['jpg', 'jpeg', 'png', 'gif'])
             && in_array($physicalExtension, ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'pdf'])) {
 
             $params = FileHelper::internalDecodeParams($params);
 
-            if ((count($params) == 0) || (count($params) == 0 && (isset($params['wm'])) && ($params['wm'] == '0'))) {
+            if ((count($params) == 0) || (count($params) == 1 && (isset($params['wm'])) && ($params['wm'] == '0'))) {
                 $mimeType = FileHelper::getMimeTypeByExtension($saveName);
-
                 readfile($physicalPath);
-
                 return $this->response
                     ->withHeader('Content-Transfer-Encoding', 'Binary')
                     ->withHeader('Content-Disposition', "inline; filename='{$saveName}'")
-                    ->withHeader('Content-Length', filesize($physicalPath))
                     ->withHeader('Content-Type', $mimeType);
             }
 
-            FileHelper::checkDir($saveDir);
+            PathHelper::checkDir($saveDir);
 
             $image = new Image($params);
             $image->path = $physicalPath;

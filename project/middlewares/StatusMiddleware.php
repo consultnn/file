@@ -27,8 +27,7 @@ class StatusMiddleware implements RequestHandlerInterface
     {
         $token = $request->getAttribute('token');
 
-        $statusPath = RUNTIME_DIR . DIRECTORY_SEPARATOR;
-        $imagesFile = $statusPath.'pdf-images-'.$token;
+        $imagesFile = RUNTIME_DIR . "pdf-images-{$token}";
 
         if (!$token) {
             return $this->response->withJson(['status' => 'error']);

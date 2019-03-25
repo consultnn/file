@@ -6,7 +6,6 @@ use Imagine\Image\Palette\RGB;
 use Imagine\Image\Point;
 use Imagine\Imagick\Font;
 use Imagine\Imagick\Image;
-use Imagine\Utils\Matrix;
 
 trait WatermarkTrait
 {

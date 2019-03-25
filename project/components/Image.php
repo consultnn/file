@@ -2,13 +2,32 @@
 
 namespace components;
 
+use components\filters\Gravity;
+use components\filters\gravity\AbstractGravity;
+use components\filters\gravity\Bottom;
+use components\filters\gravity\BottomLeft;
+use components\filters\gravity\BottomRight;
+use components\filters\gravity\Center;
+use components\filters\gravity\Left;
+use components\filters\gravity\Right;
+use components\filters\gravity\Top;
+use components\filters\gravity\TopLeft;
+use components\filters\gravity\TopRight;
+use components\filters\GravityFactory;
 use Imagine\Filter\Basic\Autorotate;
 use Imagine\Filter\Transformation;
 use Imagine\Image\Box;
 use Imagine\Image\ImageInterface;
+use Imagine\Image\ImagineInterface;
+use Imagine\Image\Point;
 use Imagine\Imagick\Imagine;
 use traits\WatermarkTrait;
 
+/**
+ * Class Image
+ * @property ImageInterface $image
+ * @package components
+ */
 class Image
 {
     use WatermarkTrait;
@@ -23,7 +42,7 @@ class Image
     public $height;
     public $savePath;
     public $quality;
-    public $crop = false;
+    public $crop;
     public $path;
     public $format;
     public $watermark;
@@ -48,10 +67,7 @@ class Image
         }
 
         if (!empty($this->width) || !empty($this->height)) {
-            $box = new Box(($this->width ?? $this->height), ($this->height ?? $this->width));
-
-            $transformation->thumbnail($box, ImageInterface::THUMBNAIL_OUTBOUND);
-            $this->image = $transformation->apply($this->image);
+            $this->image = $this->getCropImage();
         }
 
         if (isset($this->params['ar'])) {
@@ -62,6 +78,43 @@ class Image
         if ($wm) {
             $this->image = $this->generateWatermark($this->image);
         }
+
+        return $this->image;
+    }
+
+    private function getCropImage()
+    {
+        $imageSize = $this->image->getSize();
+        $box = new Box($this->width, $this->height);
+        if ($this->width === $imageSize->getWidth() && $this->height === $imageSize->getHeight()) {
+            // The thumbnail size is the same as the wanted size.
+            return $this->image;
+        }
+        $ratios = array(
+            $this->width / $imageSize->getWidth(),
+            $this->height / $imageSize->getHeight(),
+        );
+
+        // Crop the image so that it fits the wanted size
+        $ratio = max($ratios);
+
+        if ($imageSize->contains($box)) {
+            // Downscale the image
+            $imageSize = $imageSize->scale($ratio);
+            $this->image->resize($imageSize);
+            $thumbnailSize = $box;
+        } else {
+            $thumbnailSize = new Box(
+                min($imageSize->getWidth(), $this->width),
+                min($imageSize->getHeight(), $this->height)
+            );
+        }
+
+        $gravityFactory = new GravityFactory($this->crop);
+        $gravityClassName = $gravityFactory->getClassName();
+        /** @var AbstractGravity $gravity */
+        $gravity = new $gravityClassName($imageSize, $thumbnailSize);
+        $this->image->crop($gravity->getPoint(), $thumbnailSize);
 
         return $this->image;
     }
@@ -108,10 +161,13 @@ class Image
 
         $heightParams = ['h', 'hl', 'hp', 'hs'];
         $heightKey = array_intersect($heightParams, array_keys($this->params));
-        $this->height = !empty($heightKey) ? $this->params[reset($heightKey)] : null;
-
+        $this->height = !empty($heightKey) ? $this->params[reset($heightKey)] : ($this->width ?? null);
+        if ($this->width == null && !empty($this->height)) {
+            $this->width = $this->height;
+        }
         $this->format = isset($this->params['f']) ? $this->params['f'] : null;
         $this->quality = isset($this->params['q']) ? (int)$this->params['q'] : 85;
         $this->watermark = isset($this->params['wm']) ? $this->params['wm'] : null;
+        $this->crop = isset($this->params['zc']) ? $this->params['zc'] : 1;
     }
 }
