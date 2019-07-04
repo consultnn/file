@@ -69,12 +69,7 @@ class Image
         $image = $this->generateImage();
 
         if ($this->savePath) {
-//            list($path, $extension) = explode('.', $this->savePath);
-//            $image->save("{$path}.{$this->format}", $this->options);
             $image->save($this->savePath, $this->options);
-//            if ($extension != $this->format) {
-//                rename("{$path}.{$this->format}", "{$path}.{$extension}");
-//            }
         }
 
         return $image->show($this->format, $this->options);

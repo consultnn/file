@@ -15,6 +15,7 @@ class Resize extends Filter
     {
         parent::__construct($image, $width, $height);
         $this->aoe = $aoe;
+        $this->background = $background;
     }
 
     public function setBox()
