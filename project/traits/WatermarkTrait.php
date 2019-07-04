@@ -18,34 +18,18 @@ trait WatermarkTrait
     private $margin = 5;
     private $angle = -35;
 
-    /**
-     * @param $thumbnail Image
-     * @return Image
-     */
-    public function generateWatermark($thumbnail)
+    public function generateWatermark($image)
     {
         if (!isset($this->watermark) && ($this->project == self::GIPER)) {
             $this->watermark = self::GIPER;
         }
 
         if (!empty($this->watermark)) {
-            $size = getImageSize($this->path);
-            $width	= (isset($this->width) ? $this->width : (isset($this->height) ? $this->height : 0));
-            $height	= (isset($this->height) ? $this->height : (isset($this->width) ? $this->width : 0));
-
-            if ($width >= $size[0] || empty($width)) {
-                $width = $size[0];
-            }
-
-            if ($height >= $size[1] || empty($height)) {
-                $height = $size[1];
-            }
-
             $minSize = 150;
-            $this->fontSize = sqrt($width * $height) / 45;
+            $this->fontSize = sqrt($this->width * $this->height) / 45;
             switch ($this->watermark) {
                 case self::GIPER:
-                    $this->fontSize = sqrt($width * $height) / 80;
+                    $this->fontSize = sqrt($this->width * $this->height) / 80;
                     $this->text = 'GIPERNN.RU';
                     $this->font = 'generis';
                     break;
@@ -63,33 +47,30 @@ trait WatermarkTrait
             }
             $this->margin = $this->fontSize * 10;
 
-            if (($width > $minSize) && ($height > $minSize)) {
-                $thumbnail = $this->generateWm($thumbnail);
+            if (($this->width > $minSize) && ($this->height > $minSize)) {
+                $this->generateWm($image);
             }
         }
-        return $thumbnail;
     }
 
     /**
-     * @param $thumbnail Image
-     * @return Image
+     * @param $image Image
      */
-    private function generateWm($thumbnail)
+    private function generateWm($image)
     {
         $watermarkFontFile  = realpath(__DIR__.'/../web/fonts') . "/{$this->font}.ttf";
         $palette = new RGB();
-        /** @var $thumbnail \Imagick */
-        $watermarkFont = new Font($thumbnail->getImagick(), $watermarkFontFile, $this->fontSize, $palette->color($this->hexColor, $this->opacity));
+        $watermarkFont = new Font($image->getImagick(), $watermarkFontFile, $this->fontSize, $palette->color($this->hexColor, $this->opacity));
         $text = $watermarkFont->box($this->text, $this->angle);
 
         $textWidth = $text->getWidth();
         $textHeight = $text->getHeight();
 
         $textOriginY = $textHeight + $this->margin;
-        while (($textOriginY - $textHeight) < $thumbnail->getSize()->getHeight()) {
+        while (($textOriginY - $textHeight) < $image->getSize()->getHeight()) {
             $textOriginX = $this->margin;
-            while ($textOriginX < $thumbnail->getSize()->getWidth()) {
-                $thumbnail->draw()->text(
+            while ($textOriginX < $image->getSize()->getWidth()) {
+                $image->draw()->text(
                     $this->text,
                     $watermarkFont,
                     new Point($textOriginX, $textOriginY),
@@ -99,7 +80,5 @@ trait WatermarkTrait
             }
             $textOriginY += ($textHeight + $this->margin);
         }
-        return $thumbnail;
     }
-
 }

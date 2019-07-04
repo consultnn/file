@@ -1,6 +1,6 @@
 <?php
 
-namespace middlewares;
+namespace middleware;
 
 use components\Image;
 use helpers\FileHelper;
@@ -66,13 +66,9 @@ class FileMiddleware implements RequestHandlerInterface
 
             PathHelper::checkDir($saveDir);
 
-            $image = new Image($params);
-            $image->path = $physicalPath;
+            $image = new Image($physicalPath, $params, $extension);
             $image->savePath = $fullPath;
             $image->project = $project;
-            if (empty($image->format)) {
-                $image->format = $extension;
-            }
             $image->show();
             return $this->response;
         } elseif ($extension == $physicalExtension) {

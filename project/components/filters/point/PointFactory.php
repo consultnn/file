@@ -1,18 +1,8 @@
 <?php
 
-namespace components\filters;
+namespace components\filters\point;
 
-use components\filters\gravity\Bottom;
-use components\filters\gravity\BottomLeft;
-use components\filters\gravity\BottomRight;
-use components\filters\gravity\Center;
-use components\filters\gravity\Left;
-use components\filters\gravity\Right;
-use components\filters\gravity\Top;
-use components\filters\gravity\TopLeft;
-use components\filters\gravity\TopRight;
-
-class GravityFactory
+class PointFactory
 {
     private $type;
 
@@ -52,7 +42,7 @@ class GravityFactory
                 $gravityClassName = BottomRight::class;
                 break;
             case 'C':
-            case 1:
+            case '1':
             default :
                 $gravityClassName = Center::class;
         }

@@ -7,7 +7,6 @@ class FileHelper
     public static function internalHash($filePath, $params, $token)
     {
         $hash = hash('crc32', $token . $filePath . $params . $token);
-//var_dump(str_pad(self::internalBaseConvert($hash, 16, 36), 5, '0', STR_PAD_LEFT));die();
         return str_pad(self::internalBaseConvert($hash, 16, 36), 5, '0', STR_PAD_LEFT);
     }
 
@@ -61,7 +60,7 @@ class FileHelper
      * @param $file
      * @return mixed|null
      */
-    public static function getMimeType($file)
+    private static function getMimeType($file)
     {
         $info = finfo_open(FILEINFO_MIME_TYPE);
 

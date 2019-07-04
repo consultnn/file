@@ -4,9 +4,7 @@ namespace components;
 
 use helpers\FileHelper;
 use helpers\PathHelper;
-use Imagick;
 use Imagine\File\Loader;
-use Imagine\Imagick\Imagine;
 use Slim\Http\UploadedFile;
 
 class Upload
@@ -15,21 +13,12 @@ class Upload
     public $params;
     public $files;
     public $urls;
-    public $pdf;
-    public $token;
 
     public function getFiles()
     {
         $files = [];
         foreach ($this->files as $uploadedName => $uploadedFile) {
-            $webPath = $this->saveFile($uploadedFile);
-            $files[] = $webPath;
-            if ($this->pdf) {
-                list($firstDir, $secondDir, $storageName) = PathHelper::splitNameIntoParts($webPath);
-
-                $filePath = implode(DIRECTORY_SEPARATOR, [$this->project, $firstDir, $secondDir, $storageName]);
-                $this->pdf(PathHelper::resolvePhysicalPath($filePath));
-            }
+            $files[] = $this->saveFile($uploadedFile);
         }
 
         if (isset($this->urls)) {
@@ -43,7 +32,7 @@ class Upload
      * @param UploadedFile $uploadedFile
      * @return boolean|string false при ошибках, uri при успешном сохранении.
      */
-    private function saveFile($uploadedFile)
+    public function saveFile($uploadedFile)
     {
         if ($this->checkErrors($uploadedFile)) {
             return false;
@@ -55,7 +44,7 @@ class Upload
             return PathHelper::generateWebPath($this->generateImage($uploadedFile->file, $extension), $this->project);
         }
 
-        list($webPath, $physicalPath, $storageDir) = PathHelper::makePathData($this->project, sha1($uploadedFile->file), $extension);
+        list($webPath, $physicalPath, $storageDir) = PathHelper::makePathData($this->project, sha1_file($uploadedFile->file), $extension);
 
         if (is_file($physicalPath)) {
             return $webPath;
@@ -76,16 +65,12 @@ class Upload
         return (!empty($file->getError()) || ($file->getSize() <= 0) || !is_uploaded_file($file->file));
     }
 
-
-
     private function generateImage($fileName, $extension)
     {
         $tempFile = RUNTIME_DIR . uniqid('_upload') . '.' . $extension;
-        $image = new Image($this->params[$extension]);
-        $image->format = $image->format ?? $extension;
-        $imagine = new Imagine();
-        $image->image = $imagine->open($fileName);
-        $realImage = $image->generateImage()->save($tempFile);
+        $params = array_merge($this->params[$extension], ['f' => $extension]);
+        $image = new Image($fileName, $params, $extension);
+        $realImage = $image->generateImage()->save($tempFile, $image->options);
         return [
             sha1_file($realImage->metadata()->get('filepath')),
             $tempFile,
@@ -126,7 +111,7 @@ class Upload
         $tempFile = RUNTIME_DIR . uniqid('_upload') . '.' . $extension;
         file_put_contents($tempFile, $fileContent);
 
-        $path = PathHelper::generateWebPath($tempFile, $this->project);
+        $path = PathHelper::generateWebPath($this->generateImage($tempFile, $extension), $this->project);
 
         if ($path) {
             unlink($tempFile);
@@ -143,38 +128,5 @@ class Upload
         rename($tempFile, $physicalPath);
 
         return $webPath;
-    }
-
-    public function pdf($uploadedFilePath)
-    {
-        $tmpDir = RUNTIME_DIR . microtime(true) . '_' . uniqid() . DIRECTORY_SEPARATOR;
-
-        mkdir($tmpDir);
-
-        $imagick = new Imagick();
-        $imagick->setOption('density', 150);
-        $imagick->readImage($uploadedFilePath);
-        $imagick->trimImage(0);
-        $imagick->setOption('sampling-factor', '4:4:4');
-        $imagick->writeImages($tmpDir . '%05d.jpg', false);
-        $imagick->clear();
-        $imagick->destroy();
-        $imageNames = array_diff(scandir($tmpDir), ['.', '..']);
-        $images = [];
-
-        foreach ($imageNames as $image) {
-            $imagePath = $tmpDir . $image;
-            $sha = sha1_file($imagePath);
-
-            list($webPath, $physicalPath, $storageDir) = PathHelper::makePathData($this->project, $sha, 'jpg');
-
-            PathHelper::checkDir($storageDir);
-
-            rename($imagePath, $physicalPath);
-
-            $images[]['filename'] = $webPath;
-        }
-        rmdir($tmpDir);
-        file_put_contents(RUNTIME_DIR . 'pdf-images-' . $this->token, json_encode(['status' => 'ready', 'images' => $images]));
     }
 }

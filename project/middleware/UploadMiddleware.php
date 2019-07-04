@@ -1,6 +1,6 @@
 <?php
 
-namespace middlewares;
+namespace middleware;
 
 use components\Upload;
 use Psr\Http\Message\ResponseInterface;
@@ -35,8 +35,6 @@ class UploadMiddleware implements RequestHandlerInterface
         $upload->params = $request->getQueryParams()['params'] ?? [];
         $upload->files = $request->getUploadedFiles();
         $upload->urls = isset($request->getParsedBody()['urls']) ? $request->getParsedBody()['urls'] : null;
-        $upload->pdf = isset($request->getQueryParams()['split_pdf']) ? $request->getQueryParams()['split_pdf'] : null;
-        $upload->token = isset($request->getQueryParams()['token']) ? $request->getQueryParams()['token'] : null;
 
         return $this->response->withJson($upload->getFiles());
     }

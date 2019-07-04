@@ -1,17 +1,17 @@
 <?php
 
-namespace components\filters\gravity;
+namespace components\filters\point;
 
 use Imagine\Image\BoxInterface;
 use Imagine\Image\Point;
 
 /**
- * Class AbstractGravity
+ * Class AbstractPoint
  * @property BoxInterface $box
  * @property BoxInterface $thumbnailSize
- * @package components\filters\gravity
+ * @package components\filters\point
  */
-abstract class AbstractGravity
+abstract class AbstractPoint
 {
     public $box;
     public $thumbnailSize;

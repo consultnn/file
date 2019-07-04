@@ -2,30 +2,31 @@
 
 namespace components;
 
-use components\filters\Gravity;
-use components\filters\gravity\AbstractGravity;
-use components\filters\gravity\Bottom;
-use components\filters\gravity\BottomLeft;
-use components\filters\gravity\BottomRight;
-use components\filters\gravity\Center;
-use components\filters\gravity\Left;
-use components\filters\gravity\Right;
-use components\filters\gravity\Top;
-use components\filters\gravity\TopLeft;
-use components\filters\gravity\TopRight;
-use components\filters\GravityFactory;
+use components\filters\Crop;
+use components\filters\ForceAspectRatio;
+use components\filters\Resize;
 use Imagine\Filter\Basic\Autorotate;
-use Imagine\Filter\Transformation;
-use Imagine\Image\Box;
 use Imagine\Image\ImageInterface;
-use Imagine\Image\ImagineInterface;
-use Imagine\Image\Point;
+use Imagine\Image\Palette\RGB;
 use Imagine\Imagick\Imagine;
 use traits\WatermarkTrait;
 
 /**
  * Class Image
- * @property ImageInterface $image
+ * @property \Imagine\Imagick\Image $sourceImage
+ * @property array $options
+ * @property int $quality
+ * @property string $format
+ * @property string $crop
+ * @property array $params
+ * @property integer $width
+ * @property integer $height
+ * @property string $far
+ * @property string $background
+ * @property bool $aoe
+ * @property string $watermark
+ * @property bool $autoRotate
+ * @property string $savePath
  * @package components
  */
 class Image
@@ -35,139 +36,147 @@ class Image
     const GIPER = 'gipernn';
     const DOMOSTROY = 'dom';
     const DOMOSTROYDON = 'domdon';
+    const FORMAT_JPEG = 'jpeg';
+    const FORMAT_PNG = 'png';
+    const QUALITY_DEFAULT = 85;
+    const QUALITY_MAX = 90;
 
+    public $sourceImage;
+    public $options;
+    public $quality = self::QUALITY_DEFAULT;
+    public $format;
+    public $crop;
     public $params;
-    public $image;
     public $width;
     public $height;
-    public $savePath;
-    public $quality;
-    public $crop;
-    public $path;
-    public $format;
+    public $far;
+    public $background;
+    public $aoe;
     public $watermark;
+    public $autoRotate;
+    public $savePath;
 
-    public function __construct($params)
+    public function __construct($path, $params, $extension)
     {
+        $this->sourceImage = (new Imagine)->open($path);
         $this->params = $params;
+        $this->format = $extension;
         $this->setParams();
-    }
-
-    /**
-     * @return \Imagine\Imagick\Image
-     */
-    public function generateImage()
-    {
-        $imagine = new Imagine();
-        $transformation = new Transformation;
-        $wm = false;
-        if (empty($this->image)) {
-            $this->image =  $imagine->open($this->path);
-            $wm = true;
-        }
-
-        if (!empty($this->width) || !empty($this->height)) {
-            $this->image = $this->getCropImage();
-        }
-
-        if (isset($this->params['ar'])) {
-            $autorotate = new Autorotate;
-            $autorotate->getTransformations($this->image);
-            $this->image = $autorotate->apply($this->image);
-        }
-        if ($wm) {
-            $this->image = $this->generateWatermark($this->image);
-        }
-
-        return $this->image;
-    }
-
-    private function getCropImage()
-    {
-        $imageSize = $this->image->getSize();
-        $box = new Box($this->width, $this->height);
-        if ($this->width === $imageSize->getWidth() && $this->height === $imageSize->getHeight()) {
-            // The thumbnail size is the same as the wanted size.
-            return $this->image;
-        }
-        $ratios = array(
-            $this->width / $imageSize->getWidth(),
-            $this->height / $imageSize->getHeight(),
-        );
-
-        // Crop the image so that it fits the wanted size
-        $ratio = max($ratios);
-
-        if ($imageSize->contains($box)) {
-            // Downscale the image
-            $imageSize = $imageSize->scale($ratio);
-            $this->image->resize($imageSize);
-            $thumbnailSize = $box;
-        } else {
-            $thumbnailSize = new Box(
-                min($imageSize->getWidth(), $this->width),
-                min($imageSize->getHeight(), $this->height)
-            );
-        }
-
-        $gravityFactory = new GravityFactory($this->crop);
-        $gravityClassName = $gravityFactory->getClassName();
-        /** @var AbstractGravity $gravity */
-        $gravity = new $gravityClassName($imageSize, $thumbnailSize);
-        $this->image->crop($gravity->getPoint(), $thumbnailSize);
-
-        return $this->image;
     }
 
     public function show()
     {
-        $options = $this->getQualityOptions($this->format, $this->quality);
         $image = $this->generateImage();
 
         if ($this->savePath) {
-            $image->save($this->savePath, $options);
+//            list($path, $extension) = explode('.', $this->savePath);
+//            $image->save("{$path}.{$this->format}", $this->options);
+            $image->save($this->savePath, $this->options);
+//            if ($extension != $this->format) {
+//                rename("{$path}.{$this->format}", "{$path}.{$extension}");
+//            }
         }
-        return $image->show($this->format, $options);
+
+        return $image->show($this->format, $this->options);
     }
 
     /**
-     * @param string $format
-     * @param int $quality
-     * @return array
+     * @return ImageInterface
      */
-    private function getQualityOptions($format, $quality)
+    public function generateImage()
     {
-        $options = [];
+        if ($this->crop) {
+            $paramClass = new Crop($this->sourceImage, $this->width, $this->height, $this->crop);
+        } else if ($this->far) {
+            $paramClass = new ForceAspectRatio($this->sourceImage, $this->width, $this->height, $this->far, $this->background);
+        } else {
+            $paramClass = new Resize($this->sourceImage, $this->width, $this->height, $this->aoe, $this->background);
+        }
+        $image = $paramClass->getThumbnail();
 
-        switch ($format) {
-            case 'png':
-                $options['png_compression_filter'] = ceil($quality / 10);
-                break;
-            case 'jpg':
-            case 'jpeg':
-            case 'pjpeg':
-                $options['jpeg_quality'] = $quality;
-                break;
+        if ($this->autoRotate) {
+            $autorotate = new Autorotate;
+            $autorotate->getTransformations($image);
+            $image = $autorotate->apply($image);
         }
 
-        return $options;
+        $this->generateWatermark($image);
+
+        return $image;
+    }
+
+    private function oneOfThese($values)
+    {
+        foreach ($values as $key => $value) {
+            if (isset($this->params[$value])) {
+                return $this->params[$value];
+            }
+        }
+        return null;
     }
 
     private function setParams()
     {
-        $widthParams = ['w', 'wl', 'wp', 'ws'];
-        $widthKey = array_intersect($widthParams, array_keys($this->params));
-        $this->width = !empty($widthKey) ? $this->params[reset($widthKey)] : null;
-
-        $heightParams = ['h', 'hl', 'hp', 'hs'];
-        $heightKey = array_intersect($heightParams, array_keys($this->params));
-        $this->height = !empty($heightKey) ? $this->params[reset($heightKey)] : ($this->width ?? null);
-        if ($this->width == null && !empty($this->height)) {
-            $this->width = $this->height;
+        if (isset($this->params['q'])) {
+            $this->quality = $this->params['q'] <= self::QUALITY_MAX ? $this->params['q'] : self::QUALITY_MAX;
         }
-        $this->format = isset($this->params['f']) ? $this->params['f'] : null;
-        $this->quality = isset($this->params['q']) ? (int)$this->params['q'] : 85;
-        $this->watermark = isset($this->params['wm']) ? $this->params['wm'] : null;
-        $this->crop = isset($this->params['zc']) ? $this->params['zc'] : 1;
+        $this->setOptions('quality', $this->quality);
+
+        if (isset($this->params['zc'])) {
+            $this->crop = $this->params['zc'];
+        }
+        $ratio = $this->sourceImage->getSize()->getWidth() / $this->sourceImage->getSize()->getHeight();
+        if ($ratio > 1) {
+            $widthParams = ['wl', 'w'];
+            $heightParams = ['hl', 'h'];
+        } else if ($ratio < 1) {
+            $widthParams = ['wp', 'w'];
+            $heightParams = ['hp', 'h'];
+        } else {
+            $widthParams = ['ws', 'wl', 'wp', 'w'];
+            $heightParams = ['hs', 'hl', 'hp', 'h'];
+        }
+        $this->width = $this->oneOfThese($widthParams);
+        $this->height = $this->oneOfThese($heightParams);
+
+        if (isset($this->params['far']) && empty($this->crop)) {
+            $this->far = $this->params['far'];
+        }
+
+        if (isset($this->params['bg'])) {
+            $this->background = (new RGB())->color('#' . $this->params['bg']);
+            $this->format = self::FORMAT_JPEG;
+        }
+
+        if (isset($this->params['aoe'])) {
+            $this->aoe = true;
+        }
+
+        if (isset($this->params['wm']) && $this->params['wm'] != 0) {
+            $this->watermark = $this->params['wm'];
+        }
+
+        if (isset($this->params['ar'])) {
+            $this->autoRotate = true;
+        }
+
+        $this->setFormat();
+    }
+
+    private function setFormat()
+    {
+        if (isset($params['f'])) {
+            $this->format = $params['f'];
+        }
+        $this->setOptions('format', $this->format);
+
+        if ($this->format == self::FORMAT_PNG) {
+            $this->setOptions('png_compression_filter', ceil($this->quality / 10));
+        }
+    }
+
+    private function setOptions($key, $value)
+    {
+        $this->options[$key] = $value;
     }
 }

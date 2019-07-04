@@ -1,8 +1,8 @@
 <?php
 
-namespace components\filters\gravity;
+namespace components\filters\point;
 
-class BottomLeft extends AbstractGravity
+class BottomLeft extends AbstractPoint
 {
     public function getY()
     {

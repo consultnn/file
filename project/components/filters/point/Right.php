@@ -1,8 +1,8 @@
 <?php
 
-namespace components\filters\gravity;
+namespace components\filters\point;
 
-class Right extends AbstractGravity
+class Right extends AbstractPoint
 {
     public function getX()
     {
