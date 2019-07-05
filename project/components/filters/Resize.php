@@ -39,7 +39,7 @@ class Resize extends Filter
         $thumbnailParam = $this->aoe ? ImageInterface::THUMBNAIL_FLAG_UPSCALE : ImageInterface::THUMBNAIL_INSET;
         $thumbnail = $this->image->thumbnail($this->box, $thumbnailParam);
         if ($this->background) {
-            $thumbnailWithBackground = $this->create($this->box, $this->background);
+            $thumbnailWithBackground = $this->create($thumbnail->getSize(), $this->background);
             $thumbnail = $thumbnailWithBackground->paste($thumbnail, new Point(0, 0));
         }
         return $thumbnail;
