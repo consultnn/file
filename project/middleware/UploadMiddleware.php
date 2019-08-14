@@ -2,23 +2,16 @@
 
 namespace middleware;
 
+use Application;
 use components\Upload;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
-use Slim\Http\Response;
+use Response;
+use Zend\Diactoros\Response\JsonResponse;
 
 class UploadMiddleware implements RequestHandlerInterface
 {
-    private $response;
-    private $settings;
-
-    public function __construct($settings)
-    {
-        $this->settings = $settings;
-        $this->response = new Response();
-    }
-
     /**
      * Handles a request and produces a response.
      * @param $request ServerRequestInterface
@@ -26,8 +19,9 @@ class UploadMiddleware implements RequestHandlerInterface
      */
     public function handle(ServerRequestInterface $request): ResponseInterface
     {
-        if ($request->getAttribute('uploadSecret') !== $this->settings['uploadSecret']) {
-            return $this->response->withStatus(400);
+        $response = new Response;
+        if ($request->getAttribute('uploadSecret') !== Application::getConfigValue('uploadSecret')) {
+            return $response->withStatus(400);
         }
 
         $upload = new Upload;
@@ -36,6 +30,6 @@ class UploadMiddleware implements RequestHandlerInterface
         $upload->files = $request->getUploadedFiles();
         $upload->urls = isset($request->getParsedBody()['urls']) ? $request->getParsedBody()['urls'] : null;
 
-        return $this->response->withJson($upload->getFiles());
+        return new JsonResponse($upload->getFiles());
     }
 }

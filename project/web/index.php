@@ -13,15 +13,8 @@ if (PHP_SAPI == 'cli-server') {
         return false;
     }
 }
-
 require __DIR__ . '/../vendor/autoload.php';
 
-$settings = require __DIR__ . '/../src/settings.php';
+$config = require __DIR__ . '/../src/config.php';
 
-$app = new \Slim\App($settings);
-
-require __DIR__ . '/../src/dependencies.php';
-require __DIR__ . '/../src/middleware.php';
-require __DIR__ . '/../src/routes.php';
-
-$app->run();
+(new Application($config))->run();
