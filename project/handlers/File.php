@@ -1,44 +1,32 @@
 <?php
 
-namespace middleware;
+namespace handlers;
 
-use Application;
 use components\Image;
 use helpers\FileHelper;
 use helpers\PathHelper;
-use Psr\Http\Server\RequestHandlerInterface;
 use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ServerRequestInterface;
-use Response;
 
-class FileMiddleware implements RequestHandlerInterface
+class File extends BaseHandler
 {
-    /**
-     * Handles a request and produces a response.
-     *
-     * May call other collaborating code to generate the response.
-     * @param $request ServerRequestInterface
-     * @return ResponseInterface
-     */
-    public function handle(ServerRequestInterface $request): ResponseInterface
+    public function handle(): ResponseInterface
     {
-        $response = new Response;
-        $project = $request->getAttribute('project');
-        $file = $request->getAttribute('file');
-        $hash = $request->getAttribute('hash');
-        $params = $request->getAttribute('params');
-        $extension = strtolower($request->getAttribute('extension'));
-        $hashPath = $file . '.' . $extension;
+        $file = $this->app->request->getAttribute('file');
+        $hash = $this->app->request->getAttribute('hash');
+        $params = $this->app->request->getAttribute('params');
+        $extension = strtolower($this->app->request->getAttribute('extension'));
 
-        if (FileHelper::internalHash($hashPath, $params, Application::getConfigValue('downloadSecret')) !== $hash) {
-            return $response->withStatus(400);
+        $hashPath = "{$file}.{$extension}";
+
+        if (FileHelper::internalHash($hashPath, $params, $this->app->config['downloadSecret']) !== $hash) {
+            return $this->app->response->withStatus(400);
         }
 
-        $filePath = PathHelper::makePath($file, $project);
+        $filePath = PathHelper::makePath($file, $this->app->project);
         $physicalPath = PathHelper::resolvePhysicalPath($filePath);
 
         if (!$physicalPath || !is_file($physicalPath)) {
-            return $response->withStatus(404);
+            return $this->app->response->withStatus(404);
         }
 
         $physicalExtension = FileHelper::getPhysicalExtension($physicalPath);
@@ -51,7 +39,7 @@ class FileMiddleware implements RequestHandlerInterface
             if ((count($params) == 0) || (count($params) == 1 && (isset($params['wm'])) && ($params['wm'] == '0'))) {
                 $mimeType = FileHelper::getMimeTypeByExtension($saveName);
                 readfile($physicalPath);
-                return $response
+                return $this->app->response
                     ->withHeader('Content-Transfer-Encoding', 'Binary')
                     ->withHeader('Content-Disposition', "inline; filename='{$saveName}'")
                     ->withHeader('Content-Type', $mimeType);
@@ -61,17 +49,17 @@ class FileMiddleware implements RequestHandlerInterface
 
             $image = new Image($physicalPath, $params, $extension);
             $image->savePath = $fullPath;
-            $image->project = $project;
+            $image->project = $this->app->project;
             $image->show();
-            return $response;
+            return $this->app->response;
         } elseif ($extension == $physicalExtension) {
             readfile($physicalPath);
-            return $response
+            return $this->app->response
                 ->withHeader('Content-Transfer-Encoding', 'Binary')
                 ->withHeader('Content-Disposition', "attachment; filename='{$saveName}'")
                 ->withHeader('Content-Type', 'application/pdf');
         }
 
-        return $response->withStatus(404);
+        return $this->app->response->withStatus(404);
     }
 }
