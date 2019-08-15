@@ -9,45 +9,20 @@ use Imagine\Imagick\Image;
 
 trait WatermarkTrait
 {
-    public $project;
-    private $_text = '';
-    private $_fontSize = 3;
-    private $_hexColor = 'ffffff';
-    private $_font = 'roboto';
-    private $_opacity = 25;
-    private $_margin = 5;
-    private $_angle = -35;
+    public $text;
+    public $fontSizeCoefficient;
+    public $hexColor;
+    public $font;
+    public $opacity;
+    public $marginCoefficient;
+    public $angle;
+    public $minSize;
 
     public function generateWatermark($image)
     {
-        if (!isset($this->watermark) && ($this->project == self::GIPER)) {
-            $this->watermark = self::GIPER;
-        }
-
-        if (!empty($this->watermark)) {
-            $minSize = 150;
-            $this->_fontSize = sqrt($this->width * $this->height) / 45;
-            switch ($this->watermark) {
-                case self::GIPER:
-                    $this->_fontSize = sqrt($this->width * $this->height) / 80;
-                    $this->_text = 'GIPERNN.RU';
-                    $this->_font = 'generis';
-                    break;
-                case self::DOMOSTROY:
-                    $this->_text = 'DOMOSTROYNN.RU';
-                    break;
-                case self::DOMOSTROYDON:
-                    $this->_text = 'DomostroyDON.ru';
-                    break;
-                default:
-                    $minSize = 100;
-                    $this->_text = $this->watermark;
-                    $this->_hexColor = '000000';
-                    $this->_opacity = 50;
-            }
-            $this->_margin = $this->_fontSize * 10;
-
-            if (($this->width > $minSize) && ($this->height > $minSize)) {
+        if (!empty($this->wmConfig)) {
+            $this->setConfigParams();
+            if (!empty($this->watermark) && ($this->width > $this->minSize) && ($this->height > $this->minSize)) {
                 $this->generateWm($image);
             }
         }
@@ -58,27 +33,37 @@ trait WatermarkTrait
      */
     private function generateWm($image)
     {
-        $watermarkFontFile  = realpath(__DIR__ . '/../web/fonts') . "/{$this->_font}.ttf";
+        $watermarkFontFile  = realpath(__DIR__ . '/../web/fonts') . "/{$this->font}.ttf";
         $palette = new RGB();
-        $watermarkFont = new Font($image->getImagick(), $watermarkFontFile, $this->_fontSize, $palette->color($this->_hexColor, $this->_opacity));
-        $text = $watermarkFont->box($this->_text, $this->_angle);
+        $fontSize = sqrt($this->width * $this->height) / $this->fontSizeCoefficient;
+        $watermarkFont = new Font($image->getImagick(), $watermarkFontFile, $fontSize, $palette->color($this->hexColor, $this->opacity));
+        $text = $watermarkFont->box($this->text, $this->angle);
 
         $textWidth = $text->getWidth();
         $textHeight = $text->getHeight();
-
-        $textOriginY = $textHeight + $this->_margin;
+        $margin = $fontSize * $this->marginCoefficient;
+        $textOriginY = $textHeight + $margin;
         while (($textOriginY - $textHeight) < $image->getSize()->getHeight()) {
-            $textOriginX = $this->_margin;
+            $textOriginX = $margin;
             while ($textOriginX < $image->getSize()->getWidth()) {
                 $image->draw()->text(
-                    $this->_text,
+                    $this->text,
                     $watermarkFont,
                     new Point($textOriginX, $textOriginY),
-                    $this->_angle
+                    $this->angle
                 );
-                $textOriginX += ($textWidth + $this->_margin);
+                $textOriginX += ($textWidth + $margin);
             }
-            $textOriginY += ($textHeight + $this->_margin);
+            $textOriginY += ($textHeight + $margin);
+        }
+    }
+
+    private function setConfigParams()
+    {
+        foreach ($this->wmConfig as $name => $param) {
+            if (property_exists($this, $name)) {
+                $this->$name = $param;
+            }
         }
     }
 }

@@ -2,11 +2,16 @@
 
 use Zend\Diactoros\ServerRequestFactory;
 
+/**
+ * Class Application
+ * @property \League\Flysystem\Filesystem $filesystem
+ */
 class Application
 {
     public $request;
     public $response;
     public $project = null;
+    public $components;
 
     public function __construct()
     {
@@ -20,7 +25,9 @@ class Application
         if (!array_key_exists($this->project, $config['projects'])) {
             return $this->response->withStatus(404);
         }
-
+        foreach ($config['app']['components'] as $name => $component) {
+            $this->components[$name] = $component;
+        }
         $projectRoutes = isset($config['projects'][$this->project]['routes']) ? $config['projects'][$this->project]['routes'] : [];
         $routConfig = array_merge($config['app']['routes'], $projectRoutes);
 
@@ -36,6 +43,17 @@ class Application
             return $class->handle();
         } catch (Exception $e) {
             return $this->response->withStatus($e->getCode());
+        }
+    }
+
+    public function __get($name)
+    {
+        if (property_exists($this, $name)) {
+            return $this->$name;
+        }
+        if (array_key_exists($name, $this->components)) {
+            $component = $this->components[$name];
+            return new $component['class'];
         }
     }
 }

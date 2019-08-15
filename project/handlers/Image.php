@@ -10,6 +10,9 @@ use Psr\Http\Message\ResponseInterface;
 class Image extends BaseHandler
 {
     public $downloadSecret;
+    public $extension;
+    public $physicalExtension;
+    public $wm;
 
     public function handle(): ResponseInterface
     {
@@ -32,9 +35,9 @@ class Image extends BaseHandler
         }
 
         $physicalExtension = FileHelper::getPhysicalExtension($physicalPath);
+
         list($saveDir, $fullPath, $saveName) = PathHelper::makeCachePath($filePath, $extension, $hash, $params);
-        if (in_array($extension, ['jpg', 'jpeg', 'png', 'gif'])
-            && in_array($physicalExtension, ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'pdf'])) {
+        if (in_array($extension, $this->extension) && in_array($physicalExtension, $this->physicalExtension)) {
             $params = FileHelper::internalDecodeParams($params);
 
             if ((count($params) == 0) || (count($params) == 1 && (isset($params['wm'])) && ($params['wm'] == '0'))) {
@@ -50,7 +53,10 @@ class Image extends BaseHandler
 
             $image = new ComponentImage($physicalPath, $params, $extension);
             $image->savePath = $fullPath;
-            $image->project = $this->app->project;
+            if ($this->app->project === 'gipernn') {
+                $image->watermark = true;
+            }
+            $image->wmConfig = $this->wm;
             $image->show();
             return $this->app->response;
         } elseif ($extension == $physicalExtension) {
