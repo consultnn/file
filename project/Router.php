@@ -15,9 +15,7 @@ class Router
     public function __construct($routes)
     {
         $this->_routes = $routes;
-        $routeParser = new Std;
-        $dataGenerator = new GroupCountBased;
-        $this->_collector = new RouteCollector($routeParser, $dataGenerator);
+        $this->_collector = new RouteCollector(new Std, new GroupCountBased);
     }
 
     private function getDispatcher()
@@ -31,15 +29,13 @@ class Router
 
     public function dispatch(ServerRequest $request)
     {
-        $routInfo = $this->getDispatcher()->dispatch($request->getMethod(), $request->getUri()->getPath());
-        $status = array_shift($routInfo);
+        list($status, $handlerName, $params) = array_pad($this->getDispatcher()->dispatch($request->getMethod(), $request->getUri()->getPath()), 3, null);
         if ($status == Dispatcher::NOT_FOUND) {
             throw new Exception('', 404);
         }
         if ($status == Dispatcher::METHOD_NOT_ALLOWED) {
             throw new Exception('', 405);
         }
-        list($handlerName, $params) = $routInfo;
         foreach ($params as $name => $param) {
             $request = $request->withAttribute($name, $param);
         }

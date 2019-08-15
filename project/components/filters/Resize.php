@@ -11,7 +11,7 @@ class Resize extends Filter
     public $aoe;
     public $background;
 
-    public function __construct(ImageInterface $image, $width, $height, $aoe = false, $background)
+    public function __construct(ImageInterface $image, $width, $height, $background, $aoe = false)
     {
         parent::__construct($image, $width, $height);
         $this->aoe = $aoe;
@@ -23,7 +23,7 @@ class Resize extends Filter
         if (empty($this->width) && empty($this->height)) {
             $this->width = $this->image->getSize()->getWidth();
             $this->height = $this->image->getSize()->getHeight();
-        } else if (empty($this->width) || empty($this->height)) {
+        } elseif (empty($this->width) || empty($this->height)) {
             if (empty($this->width)) {
                 $this->width = $this->height * $this->ratio;
             } else {

@@ -68,7 +68,7 @@ class PathHelper
 
         $pathInfo = pathinfo($webPath);
         $template = STORAGE_DIR . implode(DIRECTORY_SEPARATOR, [$pathInfo['dirname'], $pathInfo['filename']]);
-        $glob = glob($template . ".*");
+        $glob = glob($template . '.*');
         return $glob ? reset($glob) : false;
     }
 

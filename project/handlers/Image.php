@@ -2,12 +2,12 @@
 
 namespace handlers;
 
-use components\Image;
+use components\Image as ComponentImage;
 use helpers\FileHelper;
 use helpers\PathHelper;
 use Psr\Http\Message\ResponseInterface;
 
-class File extends BaseHandler
+class Image extends BaseHandler
 {
     public $downloadSecret;
 
@@ -35,7 +35,6 @@ class File extends BaseHandler
         list($saveDir, $fullPath, $saveName) = PathHelper::makeCachePath($filePath, $extension, $hash, $params);
         if (in_array($extension, ['jpg', 'jpeg', 'png', 'gif'])
             && in_array($physicalExtension, ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'pdf'])) {
-
             $params = FileHelper::internalDecodeParams($params);
 
             if ((count($params) == 0) || (count($params) == 1 && (isset($params['wm'])) && ($params['wm'] == '0'))) {
@@ -49,7 +48,7 @@ class File extends BaseHandler
 
             PathHelper::checkDir($saveDir);
 
-            $image = new Image($physicalPath, $params, $extension);
+            $image = new ComponentImage($physicalPath, $params, $extension);
             $image->savePath = $fullPath;
             $image->project = $this->app->project;
             $image->show();

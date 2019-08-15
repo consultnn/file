@@ -22,7 +22,7 @@ class Crop extends Filter
     {
         if (empty($this->width) && empty($this->height)) {
             $this->width = $this->height = min($this->image->getSize()->getWidth(), $this->image->getSize()->getHeight());
-        } else if (empty($this->width) || empty($this->height)) {
+        } elseif (empty($this->width) || empty($this->height)) {
             if (empty($this->width)) {
                 $this->width = $this->height;
             } else {

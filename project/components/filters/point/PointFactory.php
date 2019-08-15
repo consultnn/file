@@ -4,11 +4,11 @@ namespace components\filters\point;
 
 class PointFactory
 {
-    private $type;
+    private $_type;
 
     public function __construct($type)
     {
-        $this->type = $type;
+        $this->_type = $type;
     }
 
     /**
@@ -16,7 +16,7 @@ class PointFactory
      */
     public function getClassName()
     {
-        switch ($this->type) {
+        switch ($this->_type) {
             case 'TL':
                 $gravityClassName = TopLeft::class;
                 break;

@@ -10,13 +10,13 @@ use Imagine\Imagick\Image;
 trait WatermarkTrait
 {
     public $project;
-    private $text = '';
-    private $fontSize = 3;
-    private $hexColor = 'ffffff';
-    private $font = 'roboto';
-    private $opacity = 25;
-    private $margin = 5;
-    private $angle = -35;
+    private $_text = '';
+    private $_fontSize = 3;
+    private $_hexColor = 'ffffff';
+    private $_font = 'roboto';
+    private $_opacity = 25;
+    private $_margin = 5;
+    private $_angle = -35;
 
     public function generateWatermark($image)
     {
@@ -26,26 +26,26 @@ trait WatermarkTrait
 
         if (!empty($this->watermark)) {
             $minSize = 150;
-            $this->fontSize = sqrt($this->width * $this->height) / 45;
+            $this->_fontSize = sqrt($this->width * $this->height) / 45;
             switch ($this->watermark) {
                 case self::GIPER:
-                    $this->fontSize = sqrt($this->width * $this->height) / 80;
-                    $this->text = 'GIPERNN.RU';
-                    $this->font = 'generis';
+                    $this->_fontSize = sqrt($this->width * $this->height) / 80;
+                    $this->_text = 'GIPERNN.RU';
+                    $this->_font = 'generis';
                     break;
                 case self::DOMOSTROY:
-                    $this->text = 'DOMOSTROYNN.RU';
+                    $this->_text = 'DOMOSTROYNN.RU';
                     break;
                 case self::DOMOSTROYDON:
-                    $this->text = 'DomostroyDON.ru';
+                    $this->_text = 'DomostroyDON.ru';
                     break;
                 default:
                     $minSize = 100;
-                    $this->text = $this->watermark;
-                    $this->hexColor = '000000';
-                    $this->opacity = 50;
+                    $this->_text = $this->watermark;
+                    $this->_hexColor = '000000';
+                    $this->_opacity = 50;
             }
-            $this->margin = $this->fontSize * 10;
+            $this->_margin = $this->_fontSize * 10;
 
             if (($this->width > $minSize) && ($this->height > $minSize)) {
                 $this->generateWm($image);
@@ -58,27 +58,27 @@ trait WatermarkTrait
      */
     private function generateWm($image)
     {
-        $watermarkFontFile  = realpath(__DIR__.'/../web/fonts') . "/{$this->font}.ttf";
+        $watermarkFontFile  = realpath(__DIR__ . '/../web/fonts') . "/{$this->_font}.ttf";
         $palette = new RGB();
-        $watermarkFont = new Font($image->getImagick(), $watermarkFontFile, $this->fontSize, $palette->color($this->hexColor, $this->opacity));
-        $text = $watermarkFont->box($this->text, $this->angle);
+        $watermarkFont = new Font($image->getImagick(), $watermarkFontFile, $this->_fontSize, $palette->color($this->_hexColor, $this->_opacity));
+        $text = $watermarkFont->box($this->_text, $this->_angle);
 
         $textWidth = $text->getWidth();
         $textHeight = $text->getHeight();
 
-        $textOriginY = $textHeight + $this->margin;
+        $textOriginY = $textHeight + $this->_margin;
         while (($textOriginY - $textHeight) < $image->getSize()->getHeight()) {
-            $textOriginX = $this->margin;
+            $textOriginX = $this->_margin;
             while ($textOriginX < $image->getSize()->getWidth()) {
                 $image->draw()->text(
-                    $this->text,
+                    $this->_text,
                     $watermarkFont,
                     new Point($textOriginX, $textOriginY),
-                    $this->angle
+                    $this->_angle
                 );
-                $textOriginX += ($textWidth + $this->margin);
+                $textOriginX += ($textWidth + $this->_margin);
             }
-            $textOriginY += ($textHeight + $this->margin);
+            $textOriginY += ($textHeight + $this->_margin);
         }
     }
 }

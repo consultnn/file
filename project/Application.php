@@ -30,7 +30,8 @@ class Application
             list($handlerName, $this->request) = $router->dispatch($this->request);
             $projectHandlerConfig = isset($config['projects'][$this->project]['handler'][$handlerName]) ? $config['projects'][$this->project]['handler'][$handlerName] : [];
             $handlerConfig = array_merge($config['app']['handler'][$handlerName], $projectHandlerConfig);
-            $class = new $handlerConfig['class']($this, $handlerConfig);
+            $handlerConfig['app'] = $this;
+            $class = new $handlerConfig['class']($handlerConfig);
             /** @var $class \handlers\BaseHandler */
             return $class->handle();
         } catch (Exception $e) {

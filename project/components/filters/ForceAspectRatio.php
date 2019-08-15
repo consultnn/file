@@ -36,7 +36,7 @@ class ForceAspectRatio extends Filter
         if (empty($this->width) && empty($this->height)) {
             $this->width = $this->image->getSize()->getWidth();
             $this->height = $this->image->getSize()->getHeight();
-        } else if (empty($this->width) || empty($this->height)) {
+        } elseif (empty($this->width) || empty($this->height)) {
             $imageSize = $this->image->getSize();
             $ratio = $imageSize->getWidth() / $imageSize->getHeight();
             if (empty($this->width)) {
@@ -48,5 +48,4 @@ class ForceAspectRatio extends Filter
 
         return $this->box = new Box($this->width, $this->height);
     }
-
 }

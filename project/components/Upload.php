@@ -5,7 +5,7 @@ namespace components;
 use helpers\FileHelper;
 use helpers\PathHelper;
 use Imagine\File\Loader;
-use Slim\Http\UploadedFile;
+use Zend\Diactoros\UploadedFile;
 
 class Upload
 {
@@ -38,20 +38,20 @@ class Upload
             return false;
         }
 
-        $extension = FileHelper::getExtension($uploadedFile->file);
+        $extension = FileHelper::getExtension($uploadedFile->getClientFilename());
 
         if ($this->params || ($this->params && !empty($this->params[$extension]))) {
-            return PathHelper::generateWebPath($this->generateImage($uploadedFile->file, $extension), $this->project);
+            return PathHelper::generateWebPath($this->generateImage($uploadedFile->getClientFilename(), $extension), $this->project);
         }
 
-        list($webPath, $physicalPath, $storageDir) = PathHelper::makePathData($this->project, sha1_file($uploadedFile->file), $extension);
+        list($webPath, $physicalPath, $storageDir) = PathHelper::makePathData($this->project, sha1_file($uploadedFile->getClientFilename()), $extension);
 
         if (is_file($physicalPath)) {
             return $webPath;
         }
 
         PathHelper::checkDir($storageDir);
-        move_uploaded_file($uploadedFile->file, $physicalPath);
+        move_uploaded_file($uploadedFile->getClientFilename(), $physicalPath);
 
         return $webPath;
     }
@@ -62,7 +62,7 @@ class Upload
      */
     private function checkErrors($file)
     {
-        return (!empty($file->getError()) || ($file->getSize() <= 0) || !is_uploaded_file($file->file));
+        return (!empty($file->getError()) || ($file->getSize() <= 0) || !is_uploaded_file($file->getClientFilename()));
     }
 
     private function generateImage($fileName, $extension)
@@ -103,7 +103,6 @@ class Upload
         }
         return $results;
     }
-
 
     private function saveLoadedFile($url, $fileContent)
     {

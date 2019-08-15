@@ -68,9 +68,9 @@ class Image
     {
         $image = $this->generateImage();
 
-        if ($this->savePath) {
-            $image->save($this->savePath, $this->options);
-        }
+//        if ($this->savePath) {
+//            $image->save($this->savePath, $this->options);
+//        }
 
         return $image->show($this->format, $this->options);
     }
@@ -82,10 +82,10 @@ class Image
     {
         if ($this->crop) {
             $paramClass = new Crop($this->sourceImage, $this->width, $this->height, $this->crop);
-        } else if ($this->far) {
+        } elseif ($this->far) {
             $paramClass = new ForceAspectRatio($this->sourceImage, $this->width, $this->height, $this->far, $this->background);
         } else {
-            $paramClass = new Resize($this->sourceImage, $this->width, $this->height, $this->aoe, $this->background);
+            $paramClass = new Resize($this->sourceImage, $this->width, $this->height, $this->background, $this->aoe);
         }
         $image = $paramClass->getThumbnail();
 
@@ -124,7 +124,7 @@ class Image
         if ($ratio > 1) {
             $widthParams = ['wl', 'w'];
             $heightParams = ['hl', 'h'];
-        } else if ($ratio < 1) {
+        } elseif ($ratio < 1) {
             $widthParams = ['wp', 'w'];
             $heightParams = ['hp', 'h'];
         } else {
