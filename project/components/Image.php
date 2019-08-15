@@ -27,6 +27,7 @@ use traits\WatermarkTrait;
  * @property string $watermark
  * @property bool $autoRotate
  * @property string $savePath
+ * @property array $watermarkConfig
  * @package components
  */
 class Image
@@ -55,7 +56,7 @@ class Image
     public $watermark;
     public $autoRotate;
     public $savePath;
-    public $wmConfig;
+    public $watermarkConfig;
 
     public function __construct($path, $params, $extension)
     {

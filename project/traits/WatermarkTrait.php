@@ -20,7 +20,7 @@ trait WatermarkTrait
 
     public function generateWatermark($image)
     {
-        if (!empty($this->wmConfig)) {
+        if (!empty($this->watermarkConfig)) {
             $this->setConfigParams();
             if (!empty($this->watermark) && ($this->width > $this->minSize) && ($this->height > $this->minSize)) {
                 $this->generateWm($image);

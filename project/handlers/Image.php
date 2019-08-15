@@ -7,12 +7,21 @@ use helpers\FileHelper;
 use helpers\PathHelper;
 use Psr\Http\Message\ResponseInterface;
 
+/**
+ * Class Image
+ * @property string $downloadSecret
+ * @property array $_extension
+ * @property array $_physicalExtension
+ * @property array $watermark
+ * @package handlers
+ */
 class Image extends BaseHandler
 {
     public $downloadSecret;
-    public $extension;
-    public $physicalExtension;
-    public $wm;
+    public $watermark;
+
+    private $_allowExtensions = ['jpg', 'jpeg', 'png', 'gif'];
+    private $_physicalExtension = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'pdf'];
 
     public function handle(): ResponseInterface
     {
@@ -37,7 +46,7 @@ class Image extends BaseHandler
         $physicalExtension = FileHelper::getPhysicalExtension($physicalPath);
 
         list($saveDir, $fullPath, $saveName) = PathHelper::makeCachePath($filePath, $extension, $hash, $params);
-        if (in_array($extension, $this->extension) && in_array($physicalExtension, $this->physicalExtension)) {
+        if (in_array($extension, $this->_allowExtensions) && in_array($physicalExtension, $this->_physicalExtension)) {
             $params = FileHelper::internalDecodeParams($params);
 
             if ((count($params) == 0) || (count($params) == 1 && (isset($params['wm'])) && ($params['wm'] == '0'))) {
@@ -56,7 +65,7 @@ class Image extends BaseHandler
             if ($this->app->project === 'gipernn') {
                 $image->watermark = true;
             }
-            $image->wmConfig = $this->wm;
+            $image->watermarkConfig = $this->watermark;
             $image->show();
             return $this->app->response;
         } elseif ($extension == $physicalExtension) {

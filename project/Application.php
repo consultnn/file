@@ -5,6 +5,10 @@ use Zend\Diactoros\ServerRequestFactory;
 /**
  * Class Application
  * @property \League\Flysystem\Filesystem $filesystem
+ * @property \Zend\Diactoros\ServerRequest $request
+ * @property Response $response
+ * @property string $project
+ * @property array $components
  */
 class Application
 {
