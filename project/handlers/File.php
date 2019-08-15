@@ -9,6 +9,8 @@ use Psr\Http\Message\ResponseInterface;
 
 class File extends BaseHandler
 {
+    public $downloadSecret;
+
     public function handle(): ResponseInterface
     {
         $file = $this->app->request->getAttribute('file');
@@ -18,7 +20,7 @@ class File extends BaseHandler
 
         $hashPath = "{$file}.{$extension}";
 
-        if (FileHelper::internalHash($hashPath, $params, $this->app->config['downloadSecret']) !== $hash) {
+        if (FileHelper::internalHash($hashPath, $params, $this->downloadSecret) !== $hash) {
             return $this->app->response->withStatus(400);
         }
 

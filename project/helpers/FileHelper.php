@@ -82,7 +82,7 @@ class FileHelper
      */
     public static function getMimeTypeByExtension($file)
     {
-        $mimeTypes = include __DIR__ . '/../src/mime-types.php';
+        $mimeTypes = include __DIR__ . '/../settings/mime-types.php';
         $extension = self::getPhysicalExtension($file);
         if ($extension !== '' && isset($mimeTypes[$extension])) {
             return $mimeTypes[$extension];
