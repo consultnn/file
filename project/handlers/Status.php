@@ -3,7 +3,6 @@
 namespace handlers;
 
 use Psr\Http\Message\ResponseInterface;
-use Zend\Diactoros\Response\JsonResponse;
 
 class Status extends BaseHandler
 {
@@ -14,15 +13,15 @@ class Status extends BaseHandler
         $imagesFile = RUNTIME_DIR . "pdf-images-{$token}";
 
         if (!$token) {
-            return new JsonResponse(['status' => 'error']);
+            return $this->app->response->withJson(['status' => 'error']);
         }
 
         if (!is_file($imagesFile)) {
-            return new JsonResponse(['status' => 'process', 'percent' => 0]);
+            return $this->app->response->withJson(['status' => 'process', 'percent' => 0]);
         }
 
-        echo file_get_contents($imagesFile);
-        unlink($imagesFile);
+        echo $this->app->filesystem->read($imagesFile);
+        $this->app->filesystem->delete($imagesFile);
 
         return $this->app->response;
     }

@@ -4,7 +4,7 @@ use Zend\Diactoros\ServerRequestFactory;
 
 /**
  * Class Application
- * @property \League\Flysystem\Filesystem $filesystem
+ * @property \components\Filesystem $filesystem
  * @property \Zend\Diactoros\ServerRequest $request
  * @property Response $response
  * @property string $project
@@ -40,7 +40,8 @@ class Application
         try {
             list($handlerName, $this->request) = $router->dispatch($this->request);
             $projectHandlerConfig = isset($config['projects'][$this->project]['handler'][$handlerName]) ? $config['projects'][$this->project]['handler'][$handlerName] : [];
-            $handlerConfig = array_merge($config['app']['handler'][$handlerName], $projectHandlerConfig);
+            $projectConfig = isset($config['app']['handler'][$handlerName]) ? $config['app']['handler'][$handlerName] : [];
+            $handlerConfig = array_merge($projectConfig, $projectHandlerConfig);
             $handlerConfig['app'] = $this;
             $class = new $handlerConfig['class']($handlerConfig);
             /** @var $class \handlers\BaseHandler */

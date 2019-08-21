@@ -2,12 +2,12 @@
 
 namespace components;
 
-use helpers\PathHelper;
 use Imagick;
 
 class UploadPdf extends Upload
 {
     public $token;
+
     public function getFiles()
     {
         $files = [];
@@ -15,11 +15,8 @@ class UploadPdf extends Upload
         foreach ($this->files as $uploadedName => $uploadedFile) {
             $webPath = $this->saveFile($uploadedFile);
             $files[] = $webPath;
-
-            list($firstDir, $secondDir, $storageName) = PathHelper::splitNameIntoParts($webPath);
-
-            $filePath = implode(DIRECTORY_SEPARATOR, [$this->project, $firstDir, $secondDir, $storageName]);
-            $this->pdf(PathHelper::resolvePhysicalPath($filePath));
+            $this->filesystem->fileName = $webPath;
+            $this->pdf($this->filesystem->resolvePhysicalPath());
         }
 
         return $files;
@@ -29,7 +26,7 @@ class UploadPdf extends Upload
     {
         $tmpDir = RUNTIME_DIR . microtime(true) . '_' . uniqid() . DIRECTORY_SEPARATOR;
 
-        mkdir($tmpDir);
+        $this->filesystem->createDir($tmpDir);
 
         $imagick = new Imagick();
         $imagick->setOption('density', 150);
@@ -46,15 +43,13 @@ class UploadPdf extends Upload
             $imagePath = $tmpDir . $image;
             $sha = sha1_file($imagePath);
 
-            list($webPath, $physicalPath, $storageDir) = PathHelper::makePathData($this->project, $sha, 'jpg');
+            list($webPath, $physicalPath, $storageDir) = $this->filesystem->makePathData($sha, 'jpg');
 
-            PathHelper::checkDir($storageDir);
-
+            $this->filesystem->createDir($storageDir);
             rename($imagePath, $physicalPath);
-
             $images[]['filename'] = $webPath;
         }
-        rmdir($tmpDir);
-        file_put_contents(RUNTIME_DIR . 'pdf-images-' . $this->token, json_encode(['status' => 'ready', 'images' => $images]));
+        $this->filesystem->deleteDir($tmpDir);
+        $this->filesystem->write(RUNTIME_DIR . 'pdf-images-' . $this->token, json_encode(['status' => 'ready', 'images' => $images]));
     }
 }

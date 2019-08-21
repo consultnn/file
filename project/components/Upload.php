@@ -3,13 +3,17 @@
 namespace components;
 
 use helpers\FileHelper;
-use helpers\PathHelper;
 use Imagine\File\Loader;
 use Zend\Diactoros\UploadedFile;
 
+/**
+ * Class Upload
+ * @property Filesystem $filesystem
+ * @package components
+ */
 class Upload
 {
-    public $project;
+    public $filesystem;
     public $params;
     public $files;
     public $urls;
@@ -38,20 +42,20 @@ class Upload
             return false;
         }
 
-        $extension = FileHelper::getExtension($uploadedFile->getClientFilename());
+        $extension = FileHelper::getExtension($uploadedFile->getStream()->getMetadata('uri'));
 
         if ($this->params || ($this->params && !empty($this->params[$extension]))) {
-            return PathHelper::generateWebPath($this->generateImage($uploadedFile->getClientFilename(), $extension), $this->project);
+            return $this->filesystem->generateWebPath($this->generateImage($uploadedFile->getStream()->getMetadata('uri'), $extension));
         }
 
-        list($webPath, $physicalPath, $storageDir) = PathHelper::makePathData($this->project, sha1_file($uploadedFile->getClientFilename()), $extension);
+        list($webPath, $physicalPath, $storageDir) = $this->filesystem->makePathData(sha1_file($uploadedFile->getStream()->getMetadata('uri')), $extension);
 
-        if (is_file($physicalPath)) {
+        if ($this->filesystem->has($physicalPath)) {
             return $webPath;
         }
 
-        PathHelper::checkDir($storageDir);
-        move_uploaded_file($uploadedFile->getClientFilename(), $physicalPath);
+        $this->filesystem->createDir($storageDir);
+        move_uploaded_file($uploadedFile->getStream()->getMetadata('uri'), $physicalPath);
 
         return $webPath;
     }
@@ -62,13 +66,13 @@ class Upload
      */
     private function checkErrors($file)
     {
-        return (!empty($file->getError()) || ($file->getSize() <= 0) || !is_uploaded_file($file->getClientFilename()));
+        return (!empty($file->getError()) || ($file->getSize() <= 0) || !is_uploaded_file($file->getStream()->getMetadata('uri')));
     }
 
     private function generateImage($fileName, $extension)
     {
         $tempFile = RUNTIME_DIR . uniqid('_upload') . '.' . $extension;
-        $params = array_merge($this->params[$extension], ['f' => $extension]);
+        $params = array_merge($this->params, ['f' => $extension]);
         $image = new Image($fileName, $params, $extension);
         $realImage = $image->generateImage()->save($tempFile, $image->options);
         return [
@@ -106,26 +110,10 @@ class Upload
 
     private function saveLoadedFile($url, $fileContent)
     {
-        $extension = pathinfo($url, PATHINFO_EXTENSION);
+        $extension = FileHelper::getPhysicalExtension($url);
         $tempFile = RUNTIME_DIR . uniqid('_upload') . '.' . $extension;
-        file_put_contents($tempFile, $fileContent);
+        $this->filesystem->write($tempFile, $fileContent);
 
-        $path = PathHelper::generateWebPath($this->generateImage($tempFile, $extension), $this->project);
-
-        if ($path) {
-            unlink($tempFile);
-            return $path;
-        }
-
-        list($webPath, $physicalPath, $storageDir) = PathHelper::makePathData($this->project, sha1($tempFile), $extension);
-
-        if (is_file($physicalPath)) {
-            unlink($tempFile);
-            return $webPath;
-        }
-        PathHelper::checkDir($storageDir);
-        rename($tempFile, $physicalPath);
-
-        return $webPath;
+        return $this->filesystem->generateWebPath($this->generateImage($tempFile, $extension));
     }
 }

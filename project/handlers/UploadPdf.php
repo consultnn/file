@@ -4,7 +4,6 @@ namespace handlers;
 
 use components\UploadPdf as UploadPdfComponent;
 use Psr\Http\Message\ResponseInterface;
-use Zend\Diactoros\Response\JsonResponse;
 
 class UploadPdf extends BaseHandler
 {
@@ -17,11 +16,12 @@ class UploadPdf extends BaseHandler
         }
 
         $upload = new UploadPdfComponent;
-        $upload->project = $this->app->project;
+        $upload->filesystem = $this->app->filesystem;
+        $upload->filesystem->project = $this->app->project;
         $upload->params = $this->app->request->getQueryParams()['params'] ?? [];
         $upload->files = $this->app->request->getUploadedFiles();
         $upload->token = isset($this->app->request->getQueryParams()['token']) ? $this->app->request->getQueryParams()['token'] : null;
 
-        return new JsonResponse($upload->getFiles());
+        return $this->app->response->withJson($upload->getFiles());
     }
 }

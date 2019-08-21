@@ -4,7 +4,7 @@ namespace handlers;
 
 use components\Image as ComponentImage;
 use helpers\FileHelper;
-use helpers\PathHelper;
+use League\Flysystem\Util;
 use Psr\Http\Message\ResponseInterface;
 
 /**
@@ -35,33 +35,29 @@ class Image extends BaseHandler
         if (FileHelper::internalHash($hashPath, $params, $this->downloadSecret) !== $hash) {
             return $this->app->response->withStatus(400);
         }
+        $filesystem = $this->app->filesystem;
+        $filesystem->project = $this->app->project;
+        $filesystem->fileName = $file;
 
-        $filePath = PathHelper::makePath($file, $this->app->project);
-        $physicalPath = PathHelper::resolvePhysicalPath($filePath);
-
+        $physicalPath = $filesystem->resolvePhysicalPath();
         if (!$physicalPath || !is_file($physicalPath)) {
             return $this->app->response->withStatus(404);
         }
 
         $physicalExtension = FileHelper::getPhysicalExtension($physicalPath);
+        $filesystem->makeCachePath($extension, $hash, $params);
 
-        list($saveDir, $fullPath, $saveName) = PathHelper::makeCachePath($filePath, $extension, $hash, $params);
         if (in_array($extension, $this->_allowExtensions) && in_array($physicalExtension, $this->_physicalExtension)) {
             $params = FileHelper::internalDecodeParams($params);
 
             if ((count($params) == 0) || (count($params) == 1 && (isset($params['wm'])) && ($params['wm'] == '0'))) {
-                $mimeType = FileHelper::getMimeTypeByExtension($saveName);
-                readfile($physicalPath);
-                return $this->app->response
-                    ->withHeader('Content-Transfer-Encoding', 'Binary')
-                    ->withHeader('Content-Disposition', "inline; filename='{$saveName}'")
-                    ->withHeader('Content-Type', $mimeType);
+                return $this->app->response->withFileHeaders($physicalPath, $filesystem->saveName);
             }
 
-            PathHelper::checkDir($saveDir);
+            $filesystem->createDir($filesystem->cachePath);
 
             $image = new ComponentImage($physicalPath, $params, $extension);
-            $image->savePath = $fullPath;
+            $image->savePath = $filesystem->cacheFile;
             if ($this->app->project === 'gipernn') {
                 $image->watermark = true;
             }
@@ -69,11 +65,7 @@ class Image extends BaseHandler
             $image->show();
             return $this->app->response;
         } elseif ($extension == $physicalExtension) {
-            readfile($physicalPath);
-            return $this->app->response
-                ->withHeader('Content-Transfer-Encoding', 'Binary')
-                ->withHeader('Content-Disposition', "attachment; filename='{$saveName}'")
-                ->withHeader('Content-Type', 'application/pdf');
+            return $this->app->response->withFileHeaders($physicalPath, $filesystem->saveName, 'attachment');
         }
 
         return $this->app->response->withStatus(404);

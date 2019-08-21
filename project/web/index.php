@@ -16,5 +16,6 @@ if (PHP_SAPI == 'cli-server') {
 require __DIR__ . '/../vendor/autoload.php';
 
 $config = require __DIR__ . '/../settings/config.php';
-
-(new Application())->run($config);
+/** @var Response $response */
+$response = (new Application())->run($config);
+$response->out();
