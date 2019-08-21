@@ -70,9 +70,9 @@ class Image
     {
         $image = $this->generateImage();
 
-//        if ($this->savePath) {
-//            $image->save($this->savePath, $this->options);
-//        }
+        if ($this->savePath) {
+            $image->save($this->savePath, $this->options);
+        }
 
         return $image->show($this->format, $this->options);
     }
