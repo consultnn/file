@@ -44,7 +44,7 @@ class Upload
 
         $extension = FileHelper::getExtension($uploadedFile->getStream()->getMetadata('uri'));
 
-        if ($this->params || ($this->params && !empty($this->params[$extension]))) {
+        if (!$this->params || ($this->params && !empty($this->params[$extension]))) {
             return $this->filesystem->generateWebPath($this->generateImage($uploadedFile->getStream()->getMetadata('uri'), $extension));
         }
 

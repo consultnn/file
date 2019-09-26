@@ -16,6 +16,7 @@ class Application
     public $response;
     public $project = null;
     public $components;
+    private $_filesystem;
 
     public function __construct()
     {
@@ -56,9 +57,19 @@ class Application
         if (property_exists($this, $name)) {
             return $this->$name;
         }
-        if (array_key_exists($name, $this->components)) {
-            $component = $this->components[$name];
-            return new $component['class'];
+
+        $getter = 'get' . $name;
+        if (method_exists($this, $getter)) {
+            return $this->$getter();
         }
+    }
+
+    public function getFilesystem()
+    {
+        if ($this->_filesystem) {
+            return $this->_filesystem;
+        }
+        $config = $this->components['filesystem'];
+        return $this->_filesystem = new $config['class'](['project' => $this->project]);
     }
 }

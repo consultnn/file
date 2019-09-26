@@ -78,7 +78,7 @@ class Image
     }
 
     /**
-     * @return ImageInterface
+     * @return self
      */
     public function generateImage()
     {

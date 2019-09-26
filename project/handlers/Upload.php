@@ -17,10 +17,9 @@ class Upload extends BaseHandler
 
         $upload = new UploadComponent;
         $upload->filesystem = $this->app->filesystem;
-        $upload->filesystem->project = $this->app->project;
         $upload->params = $this->app->request->getQueryParams()['params'] ?? [];
         $upload->files = $this->app->request->getUploadedFiles();
-        $upload->urls = isset($this->app->request->getParsedBody()['urls']) ? $this->app->request->getParsedBody()['urls'] : null;
+        $upload->urls = $this->app->request->getParsedBody()['urls'] ?? null;
 
         return $this->app->response->withJson($upload->getFiles());
     }

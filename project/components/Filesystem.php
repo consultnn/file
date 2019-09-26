@@ -4,6 +4,7 @@ namespace components;
 
 use helpers\FileHelper;
 use League\Flysystem\Adapter\Local;
+use League\Flysystem\AdapterInterface;
 use League\Flysystem\Util;
 
 /**
@@ -12,18 +13,24 @@ use League\Flysystem\Util;
  */
 class Filesystem extends \League\Flysystem\Filesystem
 {
-    public $project;
     public $fileName;
     public $file;
     public $path;
     public $saveName;
     public $cachePath;
     public $cacheFile;
+    protected $project;
 
-    public function __construct()
+    public function __construct($config = null)
     {
+        foreach ($config as $name => $param) {
+            if (property_exists($this, $name)) {
+                $this->$name = $param;
+                unset($config[$name]);
+            }
+        }
         $adapter = new Local('/');
-        parent::__construct($adapter);
+        parent::__construct($adapter, $config);
     }
 
     public function resolvePhysicalPath()
