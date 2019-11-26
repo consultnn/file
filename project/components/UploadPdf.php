@@ -16,13 +16,13 @@ class UploadPdf extends Upload
             $webPath = $this->saveFile($uploadedFile);
             $files[] = $webPath;
             $this->filesystem->fileName = $webPath;
-            $this->pdf($this->filesystem->resolvePhysicalPath());
+            $this->pdf();
         }
 
         return $files;
     }
 
-    public function pdf($uploadedFilePath)
+    public function pdf()
     {
         $tmpDir = RUNTIME_DIR . microtime(true) . '_' . uniqid() . DIRECTORY_SEPARATOR;
 
@@ -30,7 +30,7 @@ class UploadPdf extends Upload
 
         $imagick = new Imagick();
         $imagick->setOption('density', 150);
-        $imagick->readImage($uploadedFilePath);
+        $imagick->readImage($this->filesystem->resolvePhysicalPath());
         $imagick->trimImage(0);
         $imagick->setOption('sampling-factor', '4:4:4');
         $imagick->writeImages($tmpDir . '%05d.jpg', false);
@@ -43,10 +43,11 @@ class UploadPdf extends Upload
             $imagePath = $tmpDir . $image;
             $sha = sha1_file($imagePath);
 
-            list($webPath, $physicalPath, $storageDir) = $this->filesystem->makePathData($sha, 'jpg');
+            list($webPath, $physicalPath) = $this->filesystem->makePathData($sha, 'jpg');
 
-            $this->filesystem->createDir($storageDir);
-            rename($imagePath, $physicalPath);
+            if (!$this->filesystem->has($physicalPath)) {
+                $this->filesystem->rename($imagePath, $physicalPath);
+            }
             $images[]['filename'] = $webPath;
         }
         $this->filesystem->deleteDir($tmpDir);

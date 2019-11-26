@@ -4,7 +4,6 @@ namespace handlers;
 
 use components\Image as ComponentImage;
 use helpers\FileHelper;
-use League\Flysystem\Util;
 use Psr\Http\Message\ResponseInterface;
 
 /**
@@ -36,7 +35,6 @@ class Image extends BaseHandler
             return $this->app->response->withStatus(400);
         }
         $filesystem = $this->app->filesystem;
-        $filesystem->project = $this->app->project;
         $filesystem->fileName = $file;
 
         $physicalPath = $filesystem->resolvePhysicalPath();
@@ -58,7 +56,7 @@ class Image extends BaseHandler
 
             $image = new ComponentImage($physicalPath, $params, $extension);
             $image->savePath = $filesystem->cacheFile;
-            if ($this->app->project === 'gipernn') {
+            if ($this->app->project === 'gipernn' && !isset($params['wm'])) {
                 $image->watermark = true;
             }
             $image->watermarkConfig = $this->watermark;

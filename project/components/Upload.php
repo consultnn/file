@@ -42,20 +42,18 @@ class Upload
             return false;
         }
 
-        $extension = FileHelper::getExtension($uploadedFile->getStream()->getMetadata('uri'));
+        $uri = $uploadedFile->getStream()->getMetadata('uri');
+        $extension = $this->filesystem->getExtension($uri);
 
-        if (!$this->params || ($this->params && !empty($this->params[$extension]))) {
-            return $this->filesystem->generateWebPath($this->generateImage($uploadedFile->getStream()->getMetadata('uri'), $extension));
+        if ($this->params && !empty($this->params[$extension])) {
+            return $this->filesystem->generateWebPath($this->generateImage($uri, $extension));
         }
 
-        list($webPath, $physicalPath, $storageDir) = $this->filesystem->makePathData(sha1_file($uploadedFile->getStream()->getMetadata('uri')), $extension);
+        list($webPath, $physicalPath) = $this->filesystem->makePathData(sha1_file($uri), $extension);
 
-        if ($this->filesystem->has($physicalPath)) {
-            return $webPath;
+        if (!$this->filesystem->has($physicalPath)) {
+            move_uploaded_file($uri, $physicalPath);
         }
-
-        $this->filesystem->createDir($storageDir);
-        move_uploaded_file($uploadedFile->getStream()->getMetadata('uri'), $physicalPath);
 
         return $webPath;
     }
@@ -72,7 +70,7 @@ class Upload
     private function generateImage($fileName, $extension)
     {
         $tempFile = RUNTIME_DIR . uniqid('_upload') . '.' . $extension;
-        $params = array_merge($this->params, ['f' => $extension]);
+        $params = array_merge($this->params[$extension], ['f' => $extension]);
         $image = new Image($fileName, $params, $extension);
         $realImage = $image->generateImage()->save($tempFile, $image->options);
         return [
@@ -114,6 +112,12 @@ class Upload
         $tempFile = RUNTIME_DIR . uniqid('_upload') . '.' . $extension;
         $this->filesystem->write($tempFile, $fileContent);
 
-        return $this->filesystem->generateWebPath($this->generateImage($tempFile, $extension));
+        list($webPath, $physicalPath) = $this->filesystem->makePathData(sha1_file($tempFile), $extension);
+
+        if (!$this->filesystem->has($physicalPath)) {
+            $this->filesystem->rename($tempFile, $physicalPath);
+        }
+
+        return $webPath;
     }
 }

@@ -32,49 +32,6 @@ class FileHelper
         return $result;
     }
 
-    /**
-     * @param string $filePath
-     * @return string
-     */
-    public static function getExtension($filePath)
-    {
-        if ($mime = self::getMimeType($filePath)) {
-            return self::getExtensionFromMime($mime);
-        }
-
-        $imageInfo = getimagesize($filePath);
-        return isset($imageInfo['mime']) ? explode(DIRECTORY_SEPARATOR, $imageInfo['mime'])[1] : false;
-    }
-
-    /**
-     * @param string $mime
-     * @return null|string
-     */
-    private static function getExtensionFromMime($mime)
-    {
-        $mime = explode(';', $mime)[0];
-        return explode(DIRECTORY_SEPARATOR, $mime)[1];
-    }
-
-    /**
-     * @param $file
-     * @return mixed|null
-     */
-    private static function getMimeType($file)
-    {
-        $info = finfo_open(FILEINFO_MIME_TYPE);
-
-        if ($info) {
-            $result = finfo_file($info, $file);
-            finfo_close($info);
-
-            if ($result !== false) {
-                return $result;
-            }
-        }
-
-        return static::getMimeTypeByExtension($file);
-    }
 
     /**
      * @param string $file

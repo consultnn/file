@@ -4,7 +4,6 @@ namespace components;
 
 use helpers\FileHelper;
 use League\Flysystem\Adapter\Local;
-use League\Flysystem\AdapterInterface;
 use League\Flysystem\Util;
 
 /**
@@ -75,26 +74,28 @@ class Filesystem extends \League\Flysystem\Filesystem
             $fileDirPath .= DIRECTORY_SEPARATOR . $partItem;
         }
 
+        if (!$this->has($fileDirPath)) {
+            $this->createDir($fileDirPath);
+        }
+
         $fileAbsolutePath = $fileDirPath . DIRECTORY_SEPARATOR . $fileName . '.' . $extension;
         $webName = $webName . '.' . $extension;
 
         return [
             $webName,
-            $fileAbsolutePath,
-            $fileDirPath
+            $fileAbsolutePath
         ];
     }
 
     public function generateWebPath($image)
     {
         list($sha, $tempFile, $extension) = $image;
-        list($webPath, $physicalPath, $storageDir) = $this->makePathData($sha, $extension);
+        list($webPath, $physicalPath) = $this->makePathData($sha, $extension);
 
         if ($this->has($physicalPath)) {
             $this->delete($tempFile);
             return $webPath;
         }
-        $this->createDir($storageDir);
         $this->rename($tempFile, $physicalPath);
 
         return $webPath;
@@ -123,5 +124,11 @@ class Filesystem extends \League\Flysystem\Filesystem
     private function withCacheDir($path)
     {
         return CACHE_DIR . $path;
+    }
+
+    public function getExtension($path)
+    {
+        $imageInfo = $this->adapter->getMimetype($path);
+        return isset($imageInfo['mimetype']) ? explode(DIRECTORY_SEPARATOR, $imageInfo['mimetype'])[1] : false;
     }
 }

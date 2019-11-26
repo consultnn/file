@@ -60,7 +60,7 @@ trait WatermarkTrait
 
     private function setConfigParams()
     {
-        foreach ($this->wmConfig as $name => $param) {
+        foreach ($this->watermarkConfig as $name => $param) {
             if (property_exists($this, $name)) {
                 $this->$name = $param;
             }
