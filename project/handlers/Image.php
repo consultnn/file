@@ -32,7 +32,7 @@ class Image extends BaseHandler
         $hashPath = "{$file}.{$extension}";
 
         if (FileHelper::internalHash($hashPath, $params, $this->downloadSecret) !== $hash) {
-            return $this->app->response->withStatus(400);
+            return $this->app->response->withStatus(401);
         }
         $filesystem = $this->app->filesystem;
         $filesystem->fileName = $file;
@@ -45,7 +45,9 @@ class Image extends BaseHandler
         $physicalExtension = FileHelper::getPhysicalExtension($physicalPath);
         $filesystem->makeCachePath($extension, $hash, $params);
 
-        if (in_array($extension, $this->_allowExtensions) && in_array($physicalExtension, $this->_physicalExtension)) {
+        if (in_array($extension, $this->_allowExtensions)
+            && in_array($physicalExtension, $this->_physicalExtension)
+        ) {
             $params = FileHelper::internalDecodeParams($params);
 
             if ((count($params) == 0) || (count($params) == 1 && (isset($params['wm'])) && ($params['wm'] == '0'))) {

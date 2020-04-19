@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 readonly DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
-readonly CONTAINER_PREFIX=$(echo $(basename ${DIR}) | sed 's/[^a-zA-Z0-9_]//g');
+readonly CONTAINER_PREFIX=$(echo $(basename ${DIR}) | sed 's/[^a-zA-Z0-9_\-]//g');
 readonly CONTAINER_PHP="${CONTAINER_PREFIX}_php_1";
 
 # Форматирование текста

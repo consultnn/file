@@ -38,7 +38,7 @@ class Upload
      */
     public function saveFile($uploadedFile)
     {
-        if ($this->checkErrors($uploadedFile)) {
+        if ($this->hasErrors($uploadedFile)) {
             return false;
         }
 
@@ -52,7 +52,7 @@ class Upload
         list($webPath, $physicalPath) = $this->filesystem->makePathData(sha1_file($uri), $extension);
 
         if (!$this->filesystem->has($physicalPath)) {
-            move_uploaded_file($uri, $physicalPath);
+            $this->filesystem->rename($uri, $physicalPath);
         }
 
         return $webPath;
@@ -62,9 +62,15 @@ class Upload
      * @param $file UploadedFile
      * @return bool
      */
-    private function checkErrors($file)
+    private function hasErrors($file)
     {
-        return (!empty($file->getError()) || ($file->getSize() <= 0) || !is_uploaded_file($file->getStream()->getMetadata('uri')));
+        if (!empty($file->getError()) || $file->getSize() <= 0) {
+            return true;
+        }
+
+        $path = $file->getStream()->getMetadata('uri');
+
+        return !is_uploaded_file($path) && (dirname($path) !== sys_get_temp_dir());
     }
 
     private function generateImage($fileName, $extension)

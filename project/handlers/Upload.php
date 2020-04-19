@@ -12,7 +12,7 @@ class Upload extends BaseHandler
     public function handle(): ResponseInterface
     {
         if ($this->app->request->getAttribute('uploadSecret') !== $this->uploadSecret) {
-            return $this->app->response->withStatus(400);
+            return $this->app->response->withStatus(401);
         }
 
         $upload = new UploadComponent;
