@@ -6,7 +6,7 @@ use components\filters\Crop;
 use components\filters\ForceAspectRatio;
 use components\filters\Resize;
 use Imagine\Filter\Basic\Autorotate;
-use Imagine\Image\ImageInterface;
+use Imagine\Image\ManipulatorInterface;
 use Imagine\Image\Palette\RGB;
 use Imagine\Imagick\Imagine;
 use traits\WatermarkTrait;
@@ -77,10 +77,7 @@ class Image
         return $image->show($this->format, $this->options);
     }
 
-    /**
-     * @return self
-     */
-    public function generateImage()
+    public function generateImage(): ManipulatorInterface
     {
         if ($this->crop) {
             $paramClass = new Crop($this->sourceImage, $this->width, $this->height, $this->crop);
@@ -162,8 +159,8 @@ class Image
 
     private function setFormat()
     {
-        if (isset($params['f'])) {
-            $this->format = $params['f'];
+        if (isset($this->params['f'])) {
+            $this->format = $this->params['f'];
         }
         $this->setOptions('format', $this->format);
 
