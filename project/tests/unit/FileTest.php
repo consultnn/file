@@ -21,10 +21,10 @@ class FileTest extends TestCase
         $tempFile = \Tests\helpers\File::moveFileToTemp($filename);
         $sha = sha1_file($tempFile);
 
-        $fileSystem = new Filesystem([]);
+        $fileSystem = new Filesystem(['project' => 'example']);
         $name = File::upload($tempFile, $fileSystem);
         $this->assertEquals($name, $saveName, 'Файл сохранён с неправильным названием');
-        $this->assertEquals($sha, sha1($fileSystem->resolvePhysicalPath()), 'Файл пережат без нужды');
+        $this->assertEquals($sha, sha1_file($fileSystem->resolvePhysicalPath()), 'Файл пережат без нужды');
     }
 
 

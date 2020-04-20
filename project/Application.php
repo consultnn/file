@@ -28,7 +28,7 @@ class Application
     {
         $this->project = $this->request->getServerParams()['DOMAIN'];
         if (!array_key_exists($this->project, $config['projects'])) {
-            return $this->response->withStatus(401);
+            return $this->response->withStatus(400);
         }
         foreach ($config['app']['components'] as $name => $component) {
             $this->components[$name] = $component;

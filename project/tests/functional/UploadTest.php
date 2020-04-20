@@ -26,7 +26,20 @@ class UploadTest extends TestCase
 
     public function testFailConfig()
     {
-        $response = $this->runApp('POST', '/upload/N3edBMSnQrakH9nBK98Gmmrz367JxWCT/example2?domain=example2');
+        $server = ['DOMAIN' => 'example2'];
+        $request = new ServerRequest($server);
+        $request = $request->withMethod('POST');
+        $request = $request->withUri(new Uri('/upload/N3edBMSnQrakH9nBK98Gmmrz367JxWCT/example2?domain=example2'));
+
+        $config = array_merge(
+            require __DIR__ . '/../../settings/config.php',
+            require __DIR__ . '/../config/config.php'
+        );
+
+        $application = new Application();
+        $application->request = $request;
+
+        $response = $application->run($config);
 
         $this->assertEquals(400, $response->getStatusCode());
     }
