@@ -3,6 +3,7 @@
 namespace components;
 
 use helpers\FileHelper;
+use helpers\MimeHelper;
 use League\Flysystem\Adapter\Local;
 use League\Flysystem\Util;
 
@@ -87,7 +88,7 @@ class Filesystem extends \League\Flysystem\Filesystem
         ];
     }
 
-    public function generateWebPath($image)
+    public function generateWebPath(array $image)
     {
         list($sha, $tempFile, $extension) = $image;
         list($webPath, $physicalPath) = $this->makePathData($sha, $extension);
@@ -128,7 +129,8 @@ class Filesystem extends \League\Flysystem\Filesystem
 
     public function getExtension($path)
     {
-        $imageInfo = $this->adapter->getMimetype($path);
-        return isset($imageInfo['mimetype']) ? explode(DIRECTORY_SEPARATOR, $imageInfo['mimetype'])[1] : false;
+        $mime = $this->adapter->getMimetype($path)['mimetype'];
+
+        return MimeHelper::extension($mime, $path);
     }
 }

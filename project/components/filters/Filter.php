@@ -2,6 +2,7 @@
 
 namespace components\filters;
 
+use Imagine\Image\Box;
 use Imagine\Image\BoxInterface;
 use Imagine\Image\ImageInterface;
 use Imagine\Image\Palette\Color\ColorInterface;
@@ -24,9 +25,9 @@ abstract class Filter
         $this->setBox();
     }
 
-    abstract public function getThumbnail();
+    abstract public function getThumbnail(): ImageInterface;
 
-    abstract public function setBox();
+    abstract public function setBox(): Box;
 
     public function create(BoxInterface $box, ColorInterface $color = null)
     {
@@ -40,7 +41,7 @@ abstract class Filter
      * @param $image ImageInterface
      * @return ImageInterface
      */
-    private function setMetadata($image)
+    private function setMetadata(ImageInterface $image)
     {
         foreach ($this->image->metadata()->toArray() as $key => $value) {
             $image->metadata()->offsetSet($key, $value);

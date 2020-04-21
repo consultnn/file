@@ -58,11 +58,7 @@ class Upload
         return $webPath;
     }
 
-    /**
-     * @param $file UploadedFile
-     * @return bool
-     */
-    private function hasErrors($file)
+    private function hasErrors(UploadedFile $file): bool
     {
         if (!empty($file->getError()) || $file->getSize() <= 0) {
             return true;
@@ -73,20 +69,23 @@ class Upload
         return !is_uploaded_file($path) && (dirname($path) !== sys_get_temp_dir());
     }
 
-    private function generateImage($fileName, $extension)
+    private function generateImage($fileName, $extension): array
     {
+        $params = array_merge(['f' => $extension], $this->params[$extension]);
+        $extension = $params['f'];
         $tempFile = RUNTIME_DIR . uniqid('_upload') . '.' . $extension;
-        $params = array_merge($this->params[$extension], ['f' => $extension]);
+
         $image = new Image($fileName, $params, $extension);
-        $realImage = $image->generateImage()->save($tempFile, $image->options);
+        $image->generateImage()->save($tempFile, $image->options);
+
         return [
-            sha1_file($realImage->metadata()->get('filepath')),
+            sha1_file($tempFile),
             $tempFile,
             $image->format
         ];
     }
 
-    private function loadFiles($urls)
+    private function loadFiles(array $urls): array
     {
         $urlBlocks = array_chunk($urls, 7);
 
@@ -98,7 +97,7 @@ class Upload
         return $results;
     }
 
-    private function bulkLoad($urls)
+    private function bulkLoad(array $urls): array
     {
         $results = [];
         foreach ($urls as $url) {
@@ -112,7 +111,7 @@ class Upload
         return $results;
     }
 
-    private function saveLoadedFile($url, $fileContent)
+    private function saveLoadedFile($url, $fileContent): string
     {
         $extension = FileHelper::getPhysicalExtension($url);
         $tempFile = RUNTIME_DIR . uniqid('_upload') . '.' . $extension;

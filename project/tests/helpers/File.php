@@ -8,25 +8,15 @@ use Zend\Diactoros\UploadedFile;
 
 class File
 {
-    public static function moveFilesToTemp($files)
-    {
-        $result = [];
-        foreach ($files as $name) {
-            $tempName = self::moveFileToTemp($name);
-            $result[] = $tempName;
-        }
-        return $result;
-    }
-
-    public static function moveFileToTemp($name)
+    public static function copyFileToTemp($name)
     {
         $temp = sys_get_temp_dir();
         $tempName = $temp . DIRECTORY_SEPARATOR . basename($name);
-        copy(__DIR__ . '/../files/' . $name, $tempName);
+        copy(dirname(__DIR__) . '/files/' . $name, $tempName);
         return $tempName;
     }
 
-    public static function upload($fileName, Filesystem $fileSystem): string
+    public static function upload($fileName, Filesystem $fileSystem, array $params = []): string
     {
         if (dirname($fileName) !== sys_get_temp_dir()) {
             throw new \Exception('bad file location');
@@ -36,11 +26,10 @@ class File
             throw new \Exception('file does not exists');
         }
 
-
         $file = new UploadedFile($fileName, filesize($fileName), UPLOAD_ERR_OK);
         $upload = new Upload();
         $upload->filesystem = $fileSystem;
-        $upload->params = [];
+        $upload->params = $params;
         $upload->files = [$file];
         $upload->urls = null;
 

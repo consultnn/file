@@ -18,7 +18,7 @@ class Crop extends Filter
         $this->direction = $direction;
     }
 
-    public function setBox()
+    public function setBox(): Box
     {
         if (empty($this->width) && empty($this->height)) {
             $this->width = $this->height = min($this->image->getSize()->getWidth(), $this->image->getSize()->getHeight());

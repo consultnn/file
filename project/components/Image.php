@@ -66,12 +66,12 @@ class Image
         $this->setParams();
     }
 
-    public function show()
+    public function show(): ManipulatorInterface
     {
         $image = $this->generateImage();
 
         if ($this->savePath) {
-            $image->save($this->savePath, $this->options);
+            return $image->save($this->savePath, $this->options);
         }
 
         return $image->show($this->format, $this->options);
@@ -114,7 +114,7 @@ class Image
         if (isset($this->params['q'])) {
             $this->quality = $this->params['q'] <= self::QUALITY_MAX ? $this->params['q'] : self::QUALITY_MAX;
         }
-        $this->setOptions('quality', $this->quality);
+        $this->setOption('quality', $this->quality);
 
         if (isset($this->params['zc'])) {
             $this->crop = $this->params['zc'];
@@ -162,14 +162,14 @@ class Image
         if (isset($this->params['f'])) {
             $this->format = $this->params['f'];
         }
-        $this->setOptions('format', $this->format);
+        $this->setOption('format', $this->format);
 
-        if ($this->format == self::FORMAT_PNG) {
-            $this->setOptions('png_compression_filter', ceil($this->quality / 10));
+        if ($this->format === self::FORMAT_PNG) {
+            $this->setOption('png_compression_level', 8);
         }
     }
 
-    private function setOptions($key, $value)
+    private function setOption($key, $value)
     {
         $this->options[$key] = $value;
     }

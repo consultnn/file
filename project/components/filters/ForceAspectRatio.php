@@ -31,7 +31,7 @@ class ForceAspectRatio extends Filter
         return $thumbnail;
     }
 
-    public function setBox()
+    public function setBox(): Box
     {
         if (empty($this->width) && empty($this->height)) {
             $this->width = $this->image->getSize()->getWidth();

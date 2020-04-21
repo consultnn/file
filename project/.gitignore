@@ -1,5 +1,2 @@
 /vendor
-/storage
-/runtime
-/web/cache
 /.phpunit.result.cache

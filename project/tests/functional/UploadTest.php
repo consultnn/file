@@ -49,10 +49,11 @@ class UploadTest extends TestCase
         $source = [
             'di.png' => 'r606m0z5ygvgd.png'
         ];
-        $files = File::moveFilesToTemp(array_keys($source));
 
-        foreach ($files as $key => $name) {
-            $files[$key] = new UploadedFile($name, filesize($name), UPLOAD_ERR_OK);
+        $files = [];
+        foreach ($source as $fileName => $saveName) {
+            $tempPath = File::copyFileToTemp($fileName);
+            $files[] = new UploadedFile($tempPath, filesize($tempPath), UPLOAD_ERR_OK);
         }
 
         $response = $this->runApp(
