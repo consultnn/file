@@ -34,9 +34,8 @@ class Application
             $this->components[$name] = $component;
         }
         $projectRoutes = $config['projects'][$this->project]['routes'] ?? [];
-        $routConfig = array_merge($config['app']['routes'], $projectRoutes);
-
-        $router = new Router($routConfig);
+        $routerConfig = array_merge($config['app']['routes'], $projectRoutes);
+        $router = new Router($routerConfig);
 
         try {
             list($handlerName, $this->request) = $router->dispatch($this->request);

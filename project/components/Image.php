@@ -6,10 +6,11 @@ use components\filters\Crop;
 use components\filters\ForceAspectRatio;
 use components\filters\Resize;
 use Imagine\Filter\Basic\Autorotate;
+use Imagine\Image\ImageInterface;
 use Imagine\Image\ManipulatorInterface;
 use Imagine\Image\Palette\RGB;
 use Imagine\Imagick\Imagine;
-use traits\WatermarkTrait;
+//use Imagine\Vips\Imagine;
 
 /**
  * Class Image
@@ -32,8 +33,6 @@ use traits\WatermarkTrait;
  */
 class Image
 {
-    use WatermarkTrait;
-
     const GIPER = 'gipernn';
     const DOMOSTROY = 'dom';
     const DOMOSTROYDON = 'domdon';
@@ -77,7 +76,7 @@ class Image
         return $image->show($this->format, $this->options);
     }
 
-    public function generateImage(): ManipulatorInterface
+    public function generateImage(): ImageInterface
     {
         if ($this->crop) {
             $paramClass = new Crop($this->sourceImage, $this->width, $this->height, $this->crop);
@@ -94,7 +93,9 @@ class Image
             $image = $autorotate->apply($image);
         }
 
-        $this->generateWatermark($image);
+        if ($this->watermark) {
+            (new Watermark(new Imagine(), $this->watermarkConfig))->apply($image);
+        }
 
         return $image;
     }

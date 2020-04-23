@@ -10,8 +10,7 @@ class File
 {
     public static function copyFileToTemp($name)
     {
-        $temp = sys_get_temp_dir();
-        $tempName = $temp . DIRECTORY_SEPARATOR . basename($name);
+        $tempName = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'test-' . basename($name);
         copy(dirname(__DIR__) . '/files/' . $name, $tempName);
         return $tempName;
     }

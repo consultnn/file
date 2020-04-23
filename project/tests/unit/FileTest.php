@@ -3,8 +3,11 @@
 namespace Tests\unit;
 
 use components\Filesystem;
+use components\Image;
 use PHPUnit\Framework\TestCase;
 use Tests\helpers\File;
+use Zend\Diactoros\CallbackStream;
+use Zend\Diactoros\UploadedFile;
 
 class FileTest extends TestCase
 {
@@ -45,7 +48,7 @@ class FileTest extends TestCase
      */
     public function testChangeFormat()
     {
-        list($name, $path) = $this->upload('large.png', ['png' => ['f' => 'jpeg']]);
+        list($name, $path) = $this->upload('свободу сократу.png', ['png' => ['f' => 'jpeg']]);
         $this->assertEquals('jpeg', pathinfo($name, PATHINFO_EXTENSION));
         $this->assertEquals(IMAGETYPE_JPEG, exif_imagetype($path));
     }
@@ -55,11 +58,34 @@ class FileTest extends TestCase
      */
     public function testChangeSize()
     {
-        list($name, $path) = $this->upload('large.png', ['png' => ['w' => 100]]);
+        list($name, $path) = $this->upload('свободу сократу.png', ['png' => ['w' => 100]]);
         $this->assertEquals('png', pathinfo($name, PATHINFO_EXTENSION));
 
         $info = getimagesize($path);
         $this->assertEquals($info[0], 100);
+    }
+
+    /**
+     * @depends testStore
+     */
+    public function testWatermark()
+    {
+        $tempFile = \Tests\helpers\File::copyFileToTemp('свободу сократу.png');
+        $image = new Image($tempFile, ['wm' => true], pathinfo($tempFile, PATHINFO_EXTENSION));
+        $this->assertEquals(true, $image->watermark);
+
+        $image->watermarkConfig = [
+            'text' => 'GIPERNN.RU',
+            'fontSizeCoefficient' => 80,
+            'hexColor' => 'ffffff',
+            'font' => 'generis',
+            'opacity' => 25,
+            'angle' => -35,
+            'minSize' => 150,
+            'marginCoefficient' => 10
+        ];
+        $imageContent = $image->generateImage()->get('png');
+        file_put_contents(RUNTIME_DIR . 'test.png', $imageContent);
     }
 
     private function upload(string $fileName, array $params): array
