@@ -6,8 +6,6 @@ use components\Filesystem;
 use components\Image;
 use PHPUnit\Framework\TestCase;
 use Tests\helpers\File;
-use Zend\Diactoros\CallbackStream;
-use Zend\Diactoros\UploadedFile;
 
 class FileTest extends TestCase
 {
@@ -71,7 +69,7 @@ class FileTest extends TestCase
     public function testWatermark()
     {
         $tempFile = \Tests\helpers\File::copyFileToTemp('свободу сократу.png');
-        $image = new Image($tempFile, ['wm' => true], pathinfo($tempFile, PATHINFO_EXTENSION));
+        $image = new Image($tempFile, ['wm' => true, 'w' => 500, 'aoe' => 1], pathinfo($tempFile, PATHINFO_EXTENSION));
         $this->assertEquals(true, $image->watermark);
 
         $image->watermarkConfig = [
@@ -84,8 +82,12 @@ class FileTest extends TestCase
             'minSize' => 150,
             'marginCoefficient' => 10
         ];
-        $imageContent = $image->generateImage()->get('png');
-        file_put_contents(RUNTIME_DIR . 'test.png', $imageContent);
+
+        foreach ([-35, 0, 35] as $angle) {
+            $image->watermarkConfig['angle'] = $angle;
+            $imageContent = $image->generateImage()->get('png');
+            file_put_contents(RUNTIME_DIR . "test{$angle}.png", $imageContent);
+        }
     }
 
     private function upload(string $fileName, array $params): array

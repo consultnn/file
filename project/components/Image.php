@@ -113,7 +113,7 @@ class Image
     private function setParams()
     {
         if (isset($this->params['q'])) {
-            $this->quality = $this->params['q'] <= self::QUALITY_MAX ? $this->params['q'] : self::QUALITY_MAX;
+            $this->quality = min($this->params['q'], self::QUALITY_MAX);
         }
         $this->setOption('quality', $this->quality);
 

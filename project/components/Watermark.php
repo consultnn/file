@@ -29,7 +29,8 @@ class Watermark
         $this->imagine = $imagine;
     }
 
-    public function apply(ImageInterface $image) {
+    public function apply(ImageInterface $image): void
+    {
         $size = $image->getSize();
         $imageWidth = $size->getWidth();
         $imageHeight = $size->getHeight();
@@ -38,29 +39,52 @@ class Watermark
             return;
         }
 
-        $watermarkFontFile  = dirname(__DIR__) . "/web/fonts/{$this->font}.ttf";
-        $palette = new RGB();
-        $fontSize = sqrt($imageWidth * $imageHeight) / $this->fontSizeCoefficient;
+        $fontSize = round(sqrt($imageWidth * $imageHeight) / $this->fontSizeCoefficient);
 
-        $watermarkFont = $this->imagine->font($watermarkFontFile, $fontSize, $palette->color($this->hexColor, $this->opacity));
-        $text = $watermarkFont->box($this->text, $this->angle);
+        $watermark = $this->watermark($fontSize);
+        $textBox = $watermark->getSize();
+        $margin = round($fontSize * $this->marginCoefficient);
+        $textWidth = $textBox->getWidth();
+        $textHeight = $textBox->getHeight();
 
-        $textWidth = $text->getWidth();
-        $textHeight = $text->getHeight();
-        $margin = $fontSize * $this->marginCoefficient;
-        $textOriginY = $textHeight + $margin;
-        while (($textOriginY - $textHeight) < $imageHeight) {
-            $textOriginX = $margin;
+        $textOriginY = $textHeight;
+        $count = 0;
+        while ($textOriginY + $textHeight < $imageHeight) {
+            $textOriginX = $margin / 2;
             while ($textOriginX < $imageWidth) {
-                $image->draw()->text(
-                    $this->text,
-                    $watermarkFont,
-                    new Point($textOriginX, $textOriginY),
-                    $this->angle
-                );
-                $textOriginX += ($textWidth + $margin);
+                $count++;
+                $image->paste($watermark, new Point($textOriginX, $textOriginY));
+                $textOriginX += $textWidth + $margin;
             }
-            $textOriginY += ($textHeight + $margin);
+            $textOriginY += $margin;
         }
+    }
+
+    private function watermark(int $fontSize): ImageInterface
+    {
+        $hash = md5(serialize([
+            $this->angle,
+            $fontSize,
+            $this->font,
+            $this->hexColor,
+            $this->text,
+            $this->opacity,
+            $this->marginCoefficient,
+        ]));
+
+        $cacheFile = RUNTIME_DIR . 'watermark-' . $hash . '.png';
+
+        if (!file_exists($cacheFile)) {
+            $palette = new RGB();
+            $fontFile  = dirname(__DIR__) . "/web/fonts/{$this->font}.ttf";
+            $imagine = new \Imagine\Imagick\Imagine();
+            $watermarkFont = $imagine->font($fontFile, $fontSize, $palette->color($this->hexColor, $this->opacity));
+            $watermark = $imagine->create($watermarkFont->box($this->text), $palette->color(0xFFFFFF, 0));
+            $watermark->draw()->text($this->text, $watermarkFont, new Point(0, 0));
+            $watermark->rotate($this->angle, $palette->color(0xFFFFFF, 0));
+            $watermark->save($cacheFile);
+        }
+
+        return $this->imagine->open($cacheFile);
     }
 }
