@@ -4,7 +4,7 @@ namespace components;
 
 use helpers\FileHelper;
 use Imagine\File\Loader;
-use Zend\Diactoros\UploadedFile;
+use Laminas\Diactoros\UploadedFile;
 
 /**
  * Class Upload

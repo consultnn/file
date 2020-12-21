@@ -19,8 +19,8 @@ class Image extends BaseHandler
     public $downloadSecret;
     public $watermark;
 
-    private $_allowExtensions = ['jpg', 'jpeg', 'png', 'gif'];
-    private $_physicalExtension = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'pdf'];
+    private $_allowExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+    private $_physicalExtension = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'pdf'];
 
     public function handle(): ResponseInterface
     {

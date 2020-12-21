@@ -1,11 +1,11 @@
 <?php
 
-use Zend\Diactoros\ServerRequestFactory;
+use Laminas\Diactoros\ServerRequestFactory;
 
 /**
  * Class Application
  * @property \components\Filesystem $filesystem
- * @property \Zend\Diactoros\ServerRequest $request
+ * @property \Laminas\Diactoros\ServerRequest $request
  * @property Response $response
  * @property string $project
  * @property array $components

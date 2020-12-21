@@ -1,11 +1,11 @@
 <?php
 
-namespace Tests\unit;
+namespace tests\unit;
 
 use components\Filesystem;
 use components\Image;
 use PHPUnit\Framework\TestCase;
-use Tests\helpers\File;
+use tests\helpers\File;
 
 class FileTest extends TestCase
 {
@@ -14,7 +14,7 @@ class FileTest extends TestCase
      */
     public function testStore(string $filename, string $saveName)
     {
-        $tempFile = \Tests\helpers\File::copyFileToTemp($filename);
+        $tempFile = \tests\helpers\File::copyFileToTemp($filename);
         $sha = sha1_file($tempFile);
 
         $fileSystem = new Filesystem(['project' => 'example']);
@@ -68,7 +68,7 @@ class FileTest extends TestCase
      */
     public function testWatermark()
     {
-        $tempFile = \Tests\helpers\File::copyFileToTemp('свободу сократу.png');
+        $tempFile = \tests\helpers\File::copyFileToTemp('свободу сократу.png');
         $image = new Image($tempFile, ['wm' => true, 'w' => 500, 'aoe' => 1], pathinfo($tempFile, PATHINFO_EXTENSION));
         $this->assertEquals(true, $image->watermark);
 
@@ -92,7 +92,7 @@ class FileTest extends TestCase
 
     private function upload(string $fileName, array $params): array
     {
-        $tempFile = \Tests\helpers\File::copyFileToTemp($fileName);
+        $tempFile = \tests\helpers\File::copyFileToTemp($fileName);
 
         $fileSystem = new Filesystem(['project' => 'example']);
         $name = File::upload($tempFile, $fileSystem, $params);

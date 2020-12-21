@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace Tests\functional;
+namespace tests\functional;
 
 use Application;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
-use Tests\helpers\File;
-use Zend\Diactoros\ServerRequest;
-use Zend\Diactoros\UploadedFile;
-use Zend\Diactoros\Uri;
+use tests\helpers\File;
+use Laminas\Diactoros\ServerRequest;
+use Laminas\Diactoros\UploadedFile;
+use Laminas\Diactoros\Uri;
 
 /**
  * Class UploadTestCase

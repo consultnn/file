@@ -12,6 +12,7 @@ services:
     - TZ=Europe/Moscow
   php:
     build: ./docker/php/build
+    image: hub.icc-tech.ru/file/php
     volumes:
     - ./project:/www:rw
     - ./docker/php/php-fpm.conf:/usr/local/etc/php-fpm.conf

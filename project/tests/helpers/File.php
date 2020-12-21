@@ -1,10 +1,10 @@
 <?php
 
-namespace Tests\helpers;
+namespace tests\helpers;
 
 use components\Filesystem;
 use components\Upload;
-use Zend\Diactoros\UploadedFile;
+use Laminas\Diactoros\UploadedFile;
 
 class File
 {

@@ -1,7 +1,7 @@
 <?php
 
 use helpers\FileHelper;
-use Zend\Diactoros\Response as BaseResponse;
+use Laminas\Diactoros\Response as BaseResponse;
 
 class Response extends BaseResponse
 {
