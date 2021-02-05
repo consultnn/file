@@ -19,12 +19,14 @@ class Response extends BaseResponse
 
     public function withJson($data)
     {
+        /** TODO использовать JsonResponse */
         $this->getBody()->write(json_encode($data));
         return $this->withHeader('Content-Type', 'application/json');
     }
 
     public function out(): void
     {
+        /** TODO скорее всего не нужен, см. \Laminas\Diactoros\Response\Serializer::toString */
         if (!headers_sent()) {
             header(sprintf(
                 'HTTP/%s %s %s',
