@@ -44,11 +44,21 @@ class FileTest extends TestCase
     /**
      * @depends testStore
      */
-    public function testChangeFormat()
+    public function testChangeFormatPngToJpeg()
     {
         list($name, $path) = $this->upload('свободу сократу.png', ['png' => ['f' => 'jpeg']]);
         $this->assertEquals('jpeg', pathinfo($name, PATHINFO_EXTENSION));
         $this->assertEquals(IMAGETYPE_JPEG, exif_imagetype($path));
+    }
+
+    /**
+     * @depends testStore
+     */
+    public function testChangeFormatPngToWebp()
+    {
+        list($name, $path) = $this->upload('свободу сократу.png', ['png' => ['f' => 'webp']]);
+        $this->assertEquals('webp', pathinfo($name, PATHINFO_EXTENSION));
+        $this->assertEquals(IMAGETYPE_WEBP, exif_imagetype($path));
     }
 
     /**

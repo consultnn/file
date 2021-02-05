@@ -1,5 +1,12 @@
 <?php
 return [
+    'app' => [
+        'handler' => [
+            'image' => [
+                'downloadSecret' => 2534534
+            ],
+        ]
+    ],
     'projects' => [
         'example' => [
             'handler' => [

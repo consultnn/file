@@ -7,28 +7,15 @@ use components\filters\ForceAspectRatio;
 use components\filters\Resize;
 use Imagine\Filter\Basic\Autorotate;
 use Imagine\Image\ImageInterface;
-use Imagine\Image\ManipulatorInterface;
 use Imagine\Image\Palette\RGB;
 use Imagine\Imagick\Imagine;
+use Laminas\Diactoros\Stream;
+use Psr\Http\Message\StreamInterface;
+
 //use Imagine\Vips\Imagine;
 
 /**
  * Class Image
- * @property \Imagine\Imagick\Image $sourceImage
- * @property array $options
- * @property int $quality
- * @property string $format
- * @property string $crop
- * @property array $params
- * @property integer $width
- * @property integer $height
- * @property string $far
- * @property string $background
- * @property bool $aoe
- * @property string $watermark
- * @property bool $autoRotate
- * @property string $savePath
- * @property array $watermarkConfig
  * @package components
  */
 class Image
@@ -41,20 +28,35 @@ class Image
     const QUALITY_DEFAULT = 85;
     const QUALITY_MAX = 90;
 
+    /** @var \Imagine\Image\ImageInterface */
     public $sourceImage;
+    /** @var array */
     public $options;
+    /** @var int  */
     public $quality = self::QUALITY_DEFAULT;
+    /** @var string */
     public $format;
+    /** @var string */
     public $crop;
+    /** @var array */
     public $params;
+    /** @var integer */
     public $width;
+    /** @var integer */
     public $height;
+    /** @var string */
     public $far;
+    /** @var string */
     public $background;
+    /** @var bool */
     public $aoe;
+    /** @var string */
     public $watermark;
+    /** @var bool */
     public $autoRotate;
+    /** @var string */
     public $savePath;
+    /** @var array */
     public $watermarkConfig;
 
     public function __construct($path, $params, $extension)
@@ -65,15 +67,12 @@ class Image
         $this->setParams();
     }
 
-    public function show(): ManipulatorInterface
+    public function show(): StreamInterface
     {
+        assert($this->savePath !== null);
         $image = $this->generateImage();
-
-        if ($this->savePath) {
-            return $image->save($this->savePath, $this->options);
-        }
-
-        return $image->show($this->format, $this->options);
+        $image->save($this->savePath, $this->options);
+        return new Stream($this->savePath);
     }
 
     public function generateImage(): ImageInterface

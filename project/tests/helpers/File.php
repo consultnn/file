@@ -4,6 +4,7 @@ namespace tests\helpers;
 
 use components\Filesystem;
 use components\Upload;
+use helpers\FileHelper;
 use Laminas\Diactoros\UploadedFile;
 
 class File
@@ -36,5 +37,27 @@ class File
         $fileSystem->fileName = $name;
         return $name;
     }
+
+    public static function encodeParams(string $file, array $params, string $token): string
+    {
+        $pathInfo = pathinfo($file);
+        if (!empty($params['f'])) {
+            $pathInfo['extension'] = $params['f'];
+            $file = $pathInfo['filename'] . '.' . $pathInfo['extension'];
+            unset($params['f']);
+        }
+
+        $paramsString = '';
+        foreach ($params as $key => $value) {
+            $paramsString .= '_' . $key . '-' . $value;
+        }
+
+        $result = $pathInfo['filename'] . '_' . FileHelper::internalHash($file, $paramsString, $token). $paramsString;
+        if (!empty($pathInfo['extension'])) {
+            $result .= '.' . $pathInfo['extension'];
+        }
+        return $result;
+    }
+
 
 }

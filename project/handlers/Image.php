@@ -4,6 +4,7 @@ namespace handlers;
 
 use components\Image as ComponentImage;
 use helpers\FileHelper;
+use Laminas\Diactoros\Stream;
 use Psr\Http\Message\ResponseInterface;
 
 /**
@@ -28,7 +29,10 @@ class Image extends BaseHandler
         $hash = $this->app->request->getAttribute('hash');
         $params = $this->app->request->getAttribute('params');
         $extension = strtolower($this->app->request->getAttribute('extension'));
-
+        
+        $name = $this->app->request->getAttribute('translit') ?: $file;
+        $title = pathinfo($name, PATHINFO_FILENAME) . '.' . $extension;
+    
         $hashPath = "{$file}.{$extension}";
 
         if (FileHelper::internalHash($hashPath, $params, $this->downloadSecret) !== $hash) {
@@ -36,7 +40,7 @@ class Image extends BaseHandler
         }
         $filesystem = $this->app->filesystem;
         $filesystem->fileName = $file;
-
+        
         $physicalPath = $filesystem->resolvePhysicalPath();
         if (!$physicalPath || !is_file($physicalPath)) {
             return $this->app->response->withStatus(404);
@@ -49,25 +53,27 @@ class Image extends BaseHandler
             && in_array($physicalExtension, $this->_physicalExtension)
         ) {
             $params = FileHelper::internalDecodeParams($params);
-
-            if ((count($params) == 0) || (count($params) == 1 && (isset($params['wm'])) && ($params['wm'] == '0'))) {
-                return $this->app->response->withFileHeaders($physicalPath, $filesystem->saveName);
+            if (($extension === $physicalExtension)
+                && ((count($params) === 0)
+                    || (count($params) === 1 && (isset($params['wm'])) && ($params['wm'] === '0'))
+                )
+            ) {
+                return $this->app->response->withFileHeaders(new Stream($physicalPath), $title);
             }
 
             $filesystem->createDir($filesystem->cachePath);
-
+            
             $image = new ComponentImage($physicalPath, $params, $extension);
             $image->savePath = $filesystem->cacheFile;
             if ($this->app->project === 'gipernn' && !isset($params['wm'])) {
                 $image->watermark = true;
             }
             $image->watermarkConfig = $this->watermark;
-            $image->show();
-            return $this->app->response;
-        } elseif ($extension == $physicalExtension) {
-            return $this->app->response->withFileHeaders($physicalPath, $filesystem->saveName, 'attachment');
+            return $this->app->response->withFileHeaders($image->show(), $title);
+        } elseif ($extension === $physicalExtension) {
+            return $this->app->response->withFileHeaders(new Stream($physicalPath), $title, 'attachment');
         }
 
-        return $this->app->response->withStatus(404);
+        return $this->app->response->withStatus(422);
     }
 }

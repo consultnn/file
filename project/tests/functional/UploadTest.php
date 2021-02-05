@@ -27,11 +27,12 @@ class UploadTest extends TestCase
     public function testFailConfig()
     {
         $server = ['DOMAIN' => 'example2'];
-        $request = new ServerRequest($server);
-        $request = $request->withMethod('POST');
-        $request = $request->withUri(new Uri('/upload/N3edBMSnQrakH9nBK98Gmmrz367JxWCT/example2?domain=example2'));
+        $request = (new ServerRequest($server))
+            ->withMethod('POST')
+            ->withUri(new Uri('/upload/N3edBMSnQrakH9nBK98Gmmrz367JxWCT/example2?domain=example2'))
+        ;
 
-        $config = array_merge(
+        $config = array_replace_recursive(
             require __DIR__ . '/../../settings/config.php',
             require __DIR__ . '/../config/config.php'
         );
@@ -79,11 +80,9 @@ class UploadTest extends TestCase
     public function runApp(string $requestMethod, string $requestUri, $files = null)
     {
         $server = ['DOMAIN' => 'example'];
-        $request = new ServerRequest($server, $files ?: []);
-        $request = $request->withMethod($requestMethod);
-        $request = $request->withUri(new Uri($requestUri));
+        $request = new ServerRequest($server, $files ?: [], new Uri($requestUri), $requestMethod);
 
-        $config = array_merge(
+        $config = array_replace_recursive(
             require __DIR__ . '/../../settings/config.php',
             require __DIR__ . '/../config/config.php'
         );

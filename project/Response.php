@@ -2,26 +2,28 @@
 
 use helpers\FileHelper;
 use Laminas\Diactoros\Response as BaseResponse;
+use Psr\Http\Message\StreamInterface;
 
 class Response extends BaseResponse
 {
-    public function withFileHeaders($data, $fileName, $type = 'inline')
+    public function withFileHeaders(StreamInterface $body, string $fileName, string $type = 'inline')
     {
-        $this->getBody()->write($data);
+        /** TODO спереть из Yii отдачу имени файла */
         $response = $this->withHeader('Content-Transfer-Encoding', 'Binary')
-                ->withHeader('Content-Disposition', "$type; filename='$fileName'")
-                ->withHeader('Content-Type', FileHelper::getMimeTypeByExtension($fileName));
+            ->withHeader('Content-Disposition', "$type; filename='$fileName'")
+            ->withHeader('Content-Type', FileHelper::getMimeTypeByExtension($fileName))
+            ->withBody($body)
+        ;
         return $response;
     }
 
     public function withJson($data)
     {
         $this->getBody()->write(json_encode($data));
-        $this->withHeader('Content-Type', 'application/json');
-        return $this;
+        return $this->withHeader('Content-Type', 'application/json');
     }
 
-    public function out()
+    public function out(): void
     {
         if (!headers_sent()) {
             header(sprintf(
@@ -37,7 +39,7 @@ class Response extends BaseResponse
                 }
             }
         }
-        $body = $this->getBody();
-        echo is_file($body) ? readfile($body) : $body;
+        
+        echo $this->getBody()->getContents();
     }
 }
