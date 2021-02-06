@@ -29,6 +29,7 @@ class Image extends BaseHandler
         $hash = $this->app->request->getAttribute('hash');
         $params = $this->app->request->getAttribute('params');
         $extension = strtolower($this->app->request->getAttribute('extension'));
+        /** TODO если браузер поддерживает WebP - предпочитать его */
         
         $name = $this->app->request->getAttribute('translit') ?: $file;
         $title = pathinfo($name, PATHINFO_FILENAME) . '.' . $extension;
@@ -53,6 +54,7 @@ class Image extends BaseHandler
             && in_array($physicalExtension, $this->_physicalExtension)
         ) {
             $params = FileHelper::internalDecodeParams($params);
+            /** TODO проверку, нужна ли перекодировка вынести в ComponentImage */
             if (($extension === $physicalExtension)
                 && ((count($params) === 0)
                     || (count($params) === 1 && (isset($params['wm'])) && ($params['wm'] === '0'))

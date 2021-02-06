@@ -81,7 +81,7 @@ class Upload
         return [
             sha1_file($tempFile),
             $tempFile,
-            $image->format
+            $image->format,
         ];
     }
 
@@ -100,6 +100,7 @@ class Upload
     private function bulkLoad(array $urls): array
     {
         $results = [];
+        /** TODO заменить на Curl с гипера, там ::multi превратить в генератор + добавить защиту на случай сбоев закачки */
         foreach ($urls as $url) {
             $loader = new Loader($url);
             $data = $loader->getData();

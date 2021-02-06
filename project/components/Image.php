@@ -17,6 +17,7 @@ use Psr\Http\Message\StreamInterface;
 /**
  * Class Image
  * @package components
+ * TODO режим stc (указанный цвет делаем прозрачным)
  */
 class Image
 {
@@ -139,6 +140,7 @@ class Image
 
         if (isset($this->params['bg'])) {
             $this->background = (new RGB())->color('#' . $this->params['bg']);
+            /** TODO подозрительная смена типа */
             $this->format = self::FORMAT_JPEG;
         }
 
@@ -164,6 +166,7 @@ class Image
         }
         $this->setOption('format', $this->format);
 
+        /**  TODO аналогично для WebP */
         if ($this->format === self::FORMAT_PNG) {
             $this->setOption('png_compression_level', 8);
         }
