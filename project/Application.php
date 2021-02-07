@@ -47,7 +47,7 @@ class Application
             /** @var $class \handlers\BaseHandler */
             return $class->handle();
         } catch (Exception $e) {
-            return $this->response->withStatus($e->getCode());
+            return $this->response->withStatus(500, $e->getMessage());
         }
     }
 

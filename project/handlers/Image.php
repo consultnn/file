@@ -9,19 +9,17 @@ use Psr\Http\Message\ResponseInterface;
 
 /**
  * Class Image
- * @property string $downloadSecret
- * @property array $_extension
- * @property array $_physicalExtension
- * @property array $watermark
  * @package handlers
  */
 class Image extends BaseHandler
 {
+    /** @var string */
     public $downloadSecret;
+    /** @var string */
     public $watermark;
 
-    private $_allowExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
-    private $_physicalExtension = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'pdf'];
+    private const TARGET_IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+    private const SOURCE_IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'pdf'];
 
     public function handle(): ResponseInterface
     {
@@ -29,7 +27,6 @@ class Image extends BaseHandler
         $hash = $this->app->request->getAttribute('hash');
         $params = $this->app->request->getAttribute('params');
         $extension = strtolower($this->app->request->getAttribute('extension'));
-        /** TODO если браузер поддерживает WebP - предпочитать его */
         
         $name = $this->app->request->getAttribute('translit') ?: $file;
         $title = pathinfo($name, PATHINFO_FILENAME) . '.' . $extension;
@@ -50,8 +47,8 @@ class Image extends BaseHandler
         $physicalExtension = FileHelper::getPhysicalExtension($physicalPath);
         $filesystem->makeCachePath($extension, $hash, $params);
 
-        if (in_array($extension, $this->_allowExtensions)
-            && in_array($physicalExtension, $this->_physicalExtension)
+        if (in_array($extension, self::TARGET_IMAGE_EXTENSIONS)
+            && in_array($physicalExtension, self::SOURCE_IMAGE_EXTENSIONS)
         ) {
             $params = FileHelper::internalDecodeParams($params);
             /** TODO проверку, нужна ли перекодировка вынести в ComponentImage */

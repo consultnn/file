@@ -30,19 +30,31 @@ class ImageTest extends TestCase
         }
         $this->_files = $files;
     }
-
-    public function testFile()
+    
+    /**
+     * @dataProvider images
+     */
+    public function testFile(string $extension, string $code)
     {
         $fileName = 'r606m0z5ygvgd.png';
         $token = (require __DIR__ . '/../config/config.php')['app']['handler']['image']['downloadSecret'];
-        $this->assertEquals('r606m0z5ygvgd_1mdzovh.webp', File::encodeParams($fileName, ['f' => 'webp'], $token));
+        $image = "r606m0z5ygvgd_{$code}.{$extension}";
+        $this->assertEquals($image, File::encodeParams($fileName, ['f' => $extension], $token));
 
-        $response = $this->runApp('GET', '/r606m0z5ygvgd_1mdzovh.webp');
+        $response = $this->runApp('GET', '/' . $image);
         $this->assertEquals(200, $response->getStatusCode());
     
         $response->getBody()->rewind();
         $info = getimagesizefromstring($response->getBody()->getContents());
-        $this->assertEquals('image/webp', $info['mime']);
+        $this->assertEquals("image/{$extension}", $info['mime']);
+    }
+    
+    public function images(): array
+    {
+        return [
+            ['webp', '1mdzovh'],
+//            ['avif', '1fvy639'], //Imagine не поддерживает avif
+        ];
     }
 
     /**
