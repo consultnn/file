@@ -53,6 +53,7 @@ class ImageTest extends TestCase
     {
         return [
             ['webp', '1mdzovh'],
+            ['jpeg', 'z1kvx2'],
 //            ['avif', '1fvy639'], //Imagine не поддерживает avif
         ];
     }

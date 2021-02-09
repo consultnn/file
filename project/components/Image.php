@@ -59,6 +59,8 @@ class Image
     public $savePath;
     /** @var array */
     public $watermarkConfig;
+    /** @var string */
+    public $setTransparentColor;
 
     public function __construct($path, $params, $extension)
     {
@@ -120,6 +122,12 @@ class Image
         if (isset($this->params['zc'])) {
             $this->crop = $this->params['zc'];
         }
+
+        if (isset($this->params['stc'])) {
+            /** TODO поиск пикселей похожего цвета и замена их на прозрачный. На выходе требуем png, gif или webp */
+            $this->setTransparentColor = $this->params['stc'];
+        }
+
         $ratio = $this->sourceImage->getSize()->getWidth() / $this->sourceImage->getSize()->getHeight();
         if ($ratio > 1) {
             $widthParams = ['wl', 'w'];
