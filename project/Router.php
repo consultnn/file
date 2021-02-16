@@ -1,5 +1,6 @@
 <?php
 
+use exceptions\HttpException;
 use FastRoute\Dispatcher;
 use FastRoute\Dispatcher\GroupCountBased as DispatcherGroupCountBased;
 use FastRoute\DataGenerator\GroupCountBased;
@@ -31,10 +32,10 @@ class Router
     {
         list($status, $handlerName, $params) = array_pad($this->getDispatcher()->dispatch($request->getMethod(), $request->getUri()->getPath()), 3, null);
         if ($status == Dispatcher::NOT_FOUND) {
-            throw new Exception('', 404);
+            throw new HttpException('', 404);
         }
         if ($status == Dispatcher::METHOD_NOT_ALLOWED) {
-            throw new Exception('', 405);
+            throw new HttpException('', 405);
         }
         foreach ($params as $name => $param) {
             $request = $request->withAttribute($name, $param);

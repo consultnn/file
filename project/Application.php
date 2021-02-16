@@ -1,5 +1,6 @@
 <?php
 
+use exceptions\HttpException;
 use Laminas\Diactoros\ServerRequestFactory;
 
 /**
@@ -46,8 +47,10 @@ class Application
             $class = new $handlerConfig['class']($handlerConfig);
             /** @var $class \handlers\BaseHandler */
             return $class->handle();
+        } catch (HttpException $e) {
+            return $this->response->withStatus($e->getCode(), $e->getMessage());
         } catch (Exception $e) {
-            return $this->response->withStatus(500, $e->getMessage());
+            return $this->response->withStatus(500, $e->getMessage())->withHeader('X-Reason', $e->getMessage());
         }
     }
 

@@ -41,7 +41,7 @@ class Watermark
 
         $fontSize = round(sqrt($imageWidth * $imageHeight) / $this->fontSizeCoefficient);
 
-        $watermark = $this->watermark($fontSize);
+        $watermark = $this->make($fontSize);
         $textBox = $watermark->getSize();
         $margin = round($fontSize * $this->marginCoefficient);
         $textWidth = $textBox->getWidth();
@@ -60,7 +60,7 @@ class Watermark
         }
     }
 
-    private function watermark(int $fontSize): ImageInterface
+    private function make(int $fontSize): ImageInterface
     {
         $hash = md5(serialize([
             $this->angle,
