@@ -34,12 +34,12 @@ class ImageTest extends TestCase
     /**
      * @dataProvider images
      */
-    public function testFile(string $extension, string $code)
+    public function testFile(string $extension, string $code, array $params = [])
     {
         $fileName = 'r606m0z5ygvgd.png';
         $token = (require __DIR__ . '/../config/config.php')['app']['handler']['image']['downloadSecret'];
         $image = "r606m0z5ygvgd_{$code}.{$extension}";
-        $this->assertEquals($image, File::encodeParams($fileName, ['f' => $extension], $token));
+        $this->assertEquals($image, File::encodeParams($fileName, $params + ['f' => $extension], $token));
 
         $response = $this->runApp('GET', '/' . $image);
         $this->assertEquals(200, $response->getStatusCode());
@@ -54,6 +54,7 @@ class ImageTest extends TestCase
         return [
             ['webp', '1mdzovh'],
             ['jpeg', 'z1kvx2'],
+            ['png', 'ufw50o_stc-000000', ['stc' => '000000']]
 //            ['avif', '1fvy639'], //Imagine не поддерживает avif
         ];
     }

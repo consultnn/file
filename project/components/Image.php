@@ -5,6 +5,7 @@ namespace components;
 use components\filters\Crop;
 use components\filters\ForceAspectRatio;
 use components\filters\Resize;
+use components\filters\TransparentColor;
 use Imagine\Filter\Basic\Autorotate;
 use Imagine\Image\ImageInterface;
 use Imagine\Image\Palette\RGB;
@@ -95,8 +96,15 @@ class Image
             $image = $autorotate->apply($image);
         }
 
+        if ($this->setTransparentColor) {
+            $transparent = new TransparentColor();
+            $transparent->color = $this->setTransparentColor;
+            $transparent->apply($image);
+        }
+
         if ($this->watermark) {
-            (new Watermark(new Imagine(), $this->watermarkConfig))->apply($image);
+            $watermark = new Watermark(new Imagine(), $this->watermarkConfig);
+            $watermark->apply($image);
         }
 
         return $image;
@@ -124,8 +132,7 @@ class Image
         }
 
         if (isset($this->params['stc'])) {
-            /** TODO поиск пикселей похожего цвета и замена их на прозрачный. На выходе требуем png, gif или webp */
-            $this->setTransparentColor = $this->params['stc'];
+            $this->setTransparentColor = (strlen($this->params['stc']) === 6) ? '#' . $this->params['stc'] : $this->params['stc'];
         }
 
         $ratio = $this->sourceImage->getSize()->getWidth() / $this->sourceImage->getSize()->getHeight();
