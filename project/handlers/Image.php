@@ -40,7 +40,7 @@ class Image extends BaseHandler
         $filesystem->fileName = $file;
         
         $physicalPath = $filesystem->resolvePhysicalPath();
-        if (!$physicalPath || !is_file($physicalPath)) {
+        if (!$filesystem->fileExists($physicalPath)) {
             return $this->app->response->withStatus(404);
         }
 

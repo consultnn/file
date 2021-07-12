@@ -154,7 +154,12 @@ class Image
         }
 
         if (isset($this->params['bg'])) {
-            $this->background = (new RGB())->color('#' . $this->params['bg']);
+            $palette = new RGB();
+            if ($this->params['bg'] === 'transparent') {
+                $this->background = $palette->color('#000000', 0);
+            } else {
+                $this->background = $palette->color('#' . $this->params['bg']);
+            }
             /** TODO подозрительная смена типа */
             $this->format = self::FORMAT_JPEG;
         }

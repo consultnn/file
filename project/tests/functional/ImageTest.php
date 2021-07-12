@@ -44,8 +44,9 @@ class ImageTest extends TestCase
         $response = $this->runApp('GET', '/' . $image);
         $this->assertEquals(200, $response->getStatusCode());
     
-        $response->getBody()->rewind();
-        $info = getimagesizefromstring($response->getBody()->getContents());
+        $body = $response->getBody()->getContents();
+        $info = getimagesizefromstring($body);
+        file_put_contents('/www/runtime/' . $image, $body);
         $this->assertEquals("image/{$extension}", $info['mime']);
     }
     
@@ -54,7 +55,13 @@ class ImageTest extends TestCase
         return [
             ['webp', '1mdzovh'],
             ['jpeg', 'z1kvx2'],
-            ['png', 'ufw50o_stc-000000', ['stc' => '000000']]
+            ['png', 'ufw50o_stc-000000', ['stc' => '000000']],
+            ['png', '1or6itz_stc-000000_bg-555111_w-300_h-300_far-c',
+                ['stc' => '000000', 'bg' => '555111', 'w' => 300, 'h' => 300, 'far' => 'c']
+            ],
+            ['png', '1g9ylob_stc-000000_bg-transparent_w-300_h-300_far-c',
+                ['stc' => '000000', 'bg' => 'transparent', 'w' => 300, 'h' => 300, 'far' => 'c']
+            ],
 //            ['avif', '1fvy639'], //Imagine не поддерживает avif
         ];
     }
