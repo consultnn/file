@@ -60,7 +60,7 @@ class Image extends BaseHandler
                 return $this->app->response->withFileHeaders(new Stream($physicalPath), $title);
             }
 
-            $filesystem->createDir($filesystem->cachePath);
+            $filesystem->createDirectory($filesystem->cachePath);
             
             $image = new ComponentImage($physicalPath, $params, $extension);
             $image->savePath = $filesystem->cacheFile;

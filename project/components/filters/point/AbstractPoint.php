@@ -16,7 +16,7 @@ abstract class AbstractPoint
     public $box;
     public $thumbnailSize;
 
-    public function __construct(BoxInterface $box, BoxInterface $thumbnailSize)
+    final public function __construct(BoxInterface $box, BoxInterface $thumbnailSize)
     {
         $this->box = $box;
         $this->thumbnailSize = $thumbnailSize;
@@ -32,7 +32,7 @@ abstract class AbstractPoint
         return 0;
     }
 
-    public function getPoint()
+    final public function getPoint()
     {
         return new Point(abs($this->getX()), abs($this->getY()));
     }

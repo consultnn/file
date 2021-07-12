@@ -51,8 +51,8 @@ class Upload
 
         list($webPath, $physicalPath) = $this->filesystem->makePathData(sha1_file($uri), $extension);
 
-        if (!$this->filesystem->has($physicalPath)) {
-            $this->filesystem->rename($uri, $physicalPath);
+        if (!$this->filesystem->fileExists($physicalPath)) {
+            $this->filesystem->move($uri, $physicalPath);
         }
 
         return $webPath;
@@ -120,8 +120,8 @@ class Upload
 
         list($webPath, $physicalPath) = $this->filesystem->makePathData(sha1_file($tempFile), $extension);
 
-        if (!$this->filesystem->has($physicalPath)) {
-            $this->filesystem->rename($tempFile, $physicalPath);
+        if (!$this->filesystem->fileExists($physicalPath)) {
+            $this->filesystem->move($tempFile, $physicalPath);
         }
 
         return $webPath;

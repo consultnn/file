@@ -10,12 +10,12 @@ class FileHelper
         return str_pad(self::internalBaseConvert($hash, 16, 36), 5, '0', STR_PAD_LEFT);
     }
 
-    public static function internalBaseConvert($number, $fromBase, $toBase)
+    public static function internalBaseConvert($number, $fromBase, $toBase): string
     {
         return gmp_strval(gmp_init($number, $fromBase), $toBase);
     }
 
-    public static function internalDecodeParams($paramString)
+    public static function internalDecodeParams(?string $paramString): array
     {
         $result = [];
         if (preg_match_all('/_(?:([a-z]{1,4})\-([a-z\d\|\*\.]+))+/i', $paramString, $matches)) {
@@ -31,13 +31,8 @@ class FileHelper
 
         return $result;
     }
-
-
-    /**
-     * @param string $file
-     * @return string
-     */
-    public static function getMimeTypeByExtension($file)
+    
+    public static function getMimeTypeByExtension(string $file): string
     {
         $mimeTypes = include __DIR__ . '/../settings/mime-types.php';
         $extension = self::getPhysicalExtension($file);
@@ -47,11 +42,7 @@ class FileHelper
         return 'text/plain';
     }
 
-    /**
-     * @param string $path
-     * @return string
-     */
-    public static function getPhysicalExtension($path)
+    public static function getPhysicalExtension(string $path): string
     {
         return strtolower(pathinfo($path, PATHINFO_EXTENSION));
     }

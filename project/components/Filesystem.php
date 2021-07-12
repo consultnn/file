@@ -4,7 +4,7 @@ namespace components;
 
 use helpers\FileHelper;
 use helpers\MimeHelper;
-use League\Flysystem\Adapter\Local;
+use League\Flysystem\Local\LocalFilesystemAdapter;
 use League\Flysystem\Util;
 
 /**
@@ -29,7 +29,7 @@ class Filesystem extends \League\Flysystem\Filesystem
                 unset($config[$name]);
             }
         }
-        $adapter = new Local('/');
+        $adapter = new LocalFilesystemAdapter('/');
         parent::__construct($adapter, $config);
     }
 
@@ -41,7 +41,7 @@ class Filesystem extends \League\Flysystem\Filesystem
             return STORAGE_DIR . $webPath;
         }
 
-        $pathInfo = Util::pathinfo($webPath);
+        $pathInfo = pathinfo($webPath);
         $template = STORAGE_DIR . implode(DIRECTORY_SEPARATOR, [$pathInfo['dirname'], $pathInfo['filename']]);
         $glob = glob($template . '.*');
         return $glob ? reset($glob) : false;
@@ -75,8 +75,8 @@ class Filesystem extends \League\Flysystem\Filesystem
             $fileDirPath .= DIRECTORY_SEPARATOR . $partItem;
         }
 
-        if (!$this->has($fileDirPath)) {
-            $this->createDir($fileDirPath);
+        if (!$this->fileExists($fileDirPath)) {
+            $this->createDirectory($fileDirPath);
         }
 
         $fileAbsolutePath = $fileDirPath . DIRECTORY_SEPARATOR . $fileName . '.' . $extension;
@@ -93,11 +93,11 @@ class Filesystem extends \League\Flysystem\Filesystem
         list($sha, $tempFile, $extension) = $image;
         list($webPath, $physicalPath) = $this->makePathData($sha, $extension);
 
-        if ($this->has($physicalPath)) {
+        if ($this->fileExists($physicalPath)) {
             $this->delete($tempFile);
             return $webPath;
         }
-        $this->rename($tempFile, $physicalPath);
+        $this->move($tempFile, $physicalPath);
 
         return $webPath;
     }
@@ -129,7 +129,7 @@ class Filesystem extends \League\Flysystem\Filesystem
 
     public function getExtension($path)
     {
-        $mime = $this->adapter->getMimetype($path)['mimetype'];
+        $mime = $this->mimeType($path);
 
         return MimeHelper::extension($mime, $path);
     }

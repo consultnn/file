@@ -26,7 +26,7 @@ class UploadPdf extends Upload
     {
         $tmpDir = RUNTIME_DIR . microtime(true) . '_' . uniqid() . DIRECTORY_SEPARATOR;
 
-        $this->filesystem->createDir($tmpDir);
+        $this->filesystem->createDirectory($tmpDir);
 
         $imagick = new Imagick();
         $imagick->setOption('density', 150);
@@ -45,12 +45,12 @@ class UploadPdf extends Upload
 
             list($webPath, $physicalPath) = $this->filesystem->makePathData($sha, 'jpg');
 
-            if (!$this->filesystem->has($physicalPath)) {
-                $this->filesystem->rename($imagePath, $physicalPath);
+            if (!$this->filesystem->fileExists($physicalPath)) {
+                $this->filesystem->move($imagePath, $physicalPath);
             }
             $images[]['filename'] = $webPath;
         }
-        $this->filesystem->deleteDir($tmpDir);
+        $this->filesystem->deleteDirectory($tmpDir);
         $this->filesystem->write(RUNTIME_DIR . 'pdf-images-' . $this->token, json_encode(['status' => 'ready', 'images' => $images]));
     }
 }
