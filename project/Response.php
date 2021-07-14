@@ -20,7 +20,7 @@ class Response extends BaseResponse
     public function withJson($data)
     {
         /** TODO использовать JsonResponse */
-        $this->getBody()->write(json_encode($data));
+        $this->getBody()->write(json_encode($data,  JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
         return $this->withHeader('Content-Type', 'application/json');
     }
 

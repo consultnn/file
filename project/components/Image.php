@@ -6,9 +6,10 @@ use components\filters\Crop;
 use components\filters\ForceAspectRatio;
 use components\filters\Resize;
 use components\filters\TransparentColor;
+use components\params\LegacyParamsSetter;
+use components\params\ParamsSetter;
 use Imagine\Filter\Basic\Autorotate;
 use Imagine\Image\ImageInterface;
-use Imagine\Image\Palette\RGB;
 use Imagine\Imagick\Imagine;
 use Laminas\Diactoros\Stream;
 use Psr\Http\Message\StreamInterface;
@@ -18,24 +19,19 @@ use Psr\Http\Message\StreamInterface;
 /**
  * Class Image
  * @package components
- * TODO режим stc (указанный цвет делаем прозрачным)
  */
 class Image
 {
     const GIPER = 'gipernn';
     const DOMOSTROY = 'dom';
     const DOMOSTROYDON = 'domdon';
-    const FORMAT_JPEG = 'jpeg';
-    const FORMAT_PNG = 'png';
-    const QUALITY_DEFAULT = 85;
-    const QUALITY_MAX = 90;
 
     /** @var \Imagine\Image\ImageInterface */
     public $sourceImage;
     /** @var array */
     public $options;
     /** @var int  */
-    public $quality = self::QUALITY_DEFAULT;
+    public $quality = ParamsSetter::QUALITY_DEFAULT;
     /** @var string */
     public $format;
     /** @var string */
@@ -68,7 +64,8 @@ class Image
         $this->sourceImage = (new Imagine)->open($path);
         $this->params = $params;
         $this->format = $extension;
-        $this->setParams();
+        $converter = new LegacyParamsSetter($this, $params);
+        $converter->apply();
     }
 
     public function show(): StreamInterface
@@ -108,92 +105,5 @@ class Image
         }
 
         return $image;
-    }
-
-    private function oneOfThese($values)
-    {
-        foreach ($values as $key => $value) {
-            if (isset($this->params[$value])) {
-                return $this->params[$value];
-            }
-        }
-        return null;
-    }
-
-    private function setParams()
-    {
-        if (isset($this->params['q'])) {
-            $this->quality = min($this->params['q'], self::QUALITY_MAX);
-        }
-        $this->setOption('quality', $this->quality);
-
-        if (isset($this->params['zc'])) {
-            $this->crop = $this->params['zc'];
-        }
-
-        if (isset($this->params['stc'])) {
-            $this->setTransparentColor = (strlen($this->params['stc']) === 6) ? '#' . $this->params['stc'] : $this->params['stc'];
-        }
-
-        $ratio = $this->sourceImage->getSize()->getWidth() / $this->sourceImage->getSize()->getHeight();
-        if ($ratio > 1) {
-            $widthParams = ['wl', 'w'];
-            $heightParams = ['hl', 'h'];
-        } elseif ($ratio < 1) {
-            $widthParams = ['wp', 'w'];
-            $heightParams = ['hp', 'h'];
-        } else {
-            $widthParams = ['ws', 'wl', 'wp', 'w'];
-            $heightParams = ['hs', 'hl', 'hp', 'h'];
-        }
-        $this->width = $this->oneOfThese($widthParams);
-        $this->height = $this->oneOfThese($heightParams);
-
-        if (isset($this->params['far']) && empty($this->crop)) {
-            $this->far = $this->params['far'];
-        }
-
-        if (isset($this->params['bg'])) {
-            $palette = new RGB();
-            if ($this->params['bg'] === 'transparent') {
-                $this->background = $palette->color('#000000', 0);
-            } else {
-                $this->background = $palette->color('#' . $this->params['bg']);
-            }
-            /** TODO подозрительная смена типа */
-            $this->format = self::FORMAT_JPEG;
-        }
-
-        if (isset($this->params['aoe'])) {
-            $this->aoe = true;
-        }
-
-        if (isset($this->params['wm']) && $this->params['wm'] != 0) {
-            $this->watermark = $this->params['wm'];
-        }
-
-        if (isset($this->params['ar'])) {
-            $this->autoRotate = true;
-        }
-
-        $this->setFormat();
-    }
-
-    private function setFormat()
-    {
-        if (isset($this->params['f'])) {
-            $this->format = $this->params['f'];
-        }
-        $this->setOption('format', $this->format);
-
-        /**  TODO аналогично для WebP */
-        if ($this->format === self::FORMAT_PNG) {
-            $this->setOption('png_compression_level', 8);
-        }
-    }
-
-    private function setOption($key, $value)
-    {
-        $this->options[$key] = $value;
     }
 }

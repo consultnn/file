@@ -20,6 +20,8 @@ class Status extends BaseHandler
             return $this->app->response->withJson(['status' => 'process', 'percent' => 0]);
         }
 
+        /** TODO либо отдавать нормальный ответ, либо удалить */
+        throw new \LogicException();
         echo $this->app->filesystem->read($imagesFile);
         $this->app->filesystem->delete($imagesFile);
 
