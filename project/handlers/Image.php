@@ -3,7 +3,9 @@
 namespace handlers;
 
 use components\Image as ComponentImage;
+use FileResponse;
 use helpers\FileHelper;
+use Laminas\Diactoros\Response\EmptyResponse;
 use Laminas\Diactoros\Stream;
 use Psr\Http\Message\ResponseInterface;
 
@@ -34,14 +36,14 @@ class Image extends BaseHandler
         $hashPath = "{$file}.{$extension}";
 
         if (FileHelper::internalHash($hashPath, $params, $this->downloadSecret) !== $hash) {
-            return $this->app->response->withStatus(401);
+            return new EmptyResponse(401);
         }
         $filesystem = $this->app->filesystem;
         $filesystem->fileName = $file;
         
         $physicalPath = $filesystem->resolvePhysicalPath();
         if (!$filesystem->fileExists($physicalPath)) {
-            return $this->app->response->withStatus(404);
+            return new EmptyResponse(404);
         }
 
         $physicalExtension = FileHelper::getPhysicalExtension($physicalPath);
@@ -57,7 +59,7 @@ class Image extends BaseHandler
                     || (count($params) === 1 && (isset($params['wm'])) && ($params['wm'] === '0'))
                 )
             ) {
-                return $this->app->response->withFileHeaders(new Stream($physicalPath), $title);
+                return new FileResponse(new Stream($physicalPath), $title);
             }
 
             $filesystem->createDirectory($filesystem->cachePath);
@@ -68,11 +70,11 @@ class Image extends BaseHandler
                 $image->watermark = true;
             }
             $image->watermarkConfig = $this->watermark;
-            return $this->app->response->withFileHeaders($image->show(), $title);
+            return new FileResponse($image->show(), $title);
         } elseif ($extension === $physicalExtension) {
-            return $this->app->response->withFileHeaders(new Stream($physicalPath), $title, 'attachment');
+            return new FileResponse(new Stream($physicalPath), $title, 'attachment');
         }
 
-        return $this->app->response->withStatus(422);
+        return new EmptyResponse(422);
     }
 }

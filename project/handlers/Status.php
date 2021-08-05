@@ -2,6 +2,8 @@
 
 namespace handlers;
 
+use Laminas\Diactoros\Response\JsonResponse;
+use Laminas\Diactoros\Response\TextResponse;
 use Psr\Http\Message\ResponseInterface;
 
 class Status extends BaseHandler
@@ -13,18 +15,16 @@ class Status extends BaseHandler
         $imagesFile = RUNTIME_DIR . "pdf-images-{$token}";
 
         if (!$token) {
-            return $this->app->response->withJson(['status' => 'error']);
+            return new JsonResponse(['status' => 'error']);
         }
 
         if (!is_file($imagesFile)) {
-            return $this->app->response->withJson(['status' => 'process', 'percent' => 0]);
+            return new JsonResponse(['status' => 'process', 'percent' => 0]);
         }
 
-        /** TODO либо отдавать нормальный ответ, либо удалить */
-        throw new \LogicException();
-        echo $this->app->filesystem->read($imagesFile);
+        $response = new TextResponse($this->app->filesystem->read($imagesFile), 200, ['content-type' => 'application/json']);
         $this->app->filesystem->delete($imagesFile);
 
-        return $this->app->response;
+        return $response;
     }
 }

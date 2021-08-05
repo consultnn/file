@@ -1,20 +1,19 @@
 <?php
 
 use exceptions\HttpException;
+use Laminas\Diactoros\Response\EmptyResponse;
 use Laminas\Diactoros\ServerRequestFactory;
 
 /**
  * Class Application
  * @property \components\Filesystem $filesystem
  * @property \Laminas\Diactoros\ServerRequest $request
- * @property Response $response
  * @property string $project
  * @property array $components
  */
 class Application
 {
     public $request;
-    public $response;
     public $project = null;
     public $components;
     private $_filesystem;
@@ -22,14 +21,13 @@ class Application
     public function __construct()
     {
         $this->request = ServerRequestFactory::fromGlobals();
-        $this->response = new Response;
     }
 
-    public function run($config)
+    public function run($config): \Psr\Http\Message\ResponseInterface
     {
         $this->project = $this->request->getServerParams()['DOMAIN'];
         if (!array_key_exists($this->project, $config['projects'])) {
-            return $this->response->withStatus(400);
+            return new EmptyResponse(400);
         }
         foreach ($config['app']['components'] as $name => $component) {
             $this->components[$name] = $component;
@@ -48,9 +46,9 @@ class Application
             /** @var $class \handlers\BaseHandler */
             return $class->handle();
         } catch (HttpException $e) {
-            return $this->response->withStatus($e->getCode(), $e->getMessage());
+            return new EmptyResponse($e->getCode(), ['X-Reason' => $e->getMessage()]);
         } catch (Exception $e) {
-            return $this->response->withStatus(500, $e->getMessage())->withHeader('X-Reason', $e->getMessage());
+            return new EmptyResponse(500, ['X-Reason' => $e->getMessage()]);
         }
     }
 
@@ -61,7 +59,7 @@ class Application
             return $this->$getter();
         }
 
-        throw new Exception();
+        throw new Exception("Attribute {$name} does not exists");
     }
 
     public function getFilesystem()
@@ -71,5 +69,25 @@ class Application
         }
         $config = $this->components['filesystem'];
         return $this->_filesystem = new $config['class'](['project' => $this->project]);
+    }
+
+    public function echoResponse(\Psr\Http\Message\ResponseInterface $response): void
+    {
+        if (!headers_sent()) {
+            header(sprintf(
+                'HTTP/%s %s %s',
+                $response->getProtocolVersion(),
+                $response->getStatusCode(),
+                $response->getReasonPhrase()
+            ));
+
+            foreach ($response->getHeaders() as $name => $values) {
+                foreach ($values as $value) {
+                    header(sprintf('%s: %s', $name, $value), false);
+                }
+            }
+        }
+
+        echo $response->getBody()->getContents();
     }
 }

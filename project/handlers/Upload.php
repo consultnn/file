@@ -3,6 +3,8 @@
 namespace handlers;
 
 use components\Upload as UploadComponent;
+use Laminas\Diactoros\Response\EmptyResponse;
+use Laminas\Diactoros\Response\JsonResponse;
 use Psr\Http\Message\ResponseInterface;
 
 class Upload extends BaseHandler
@@ -12,7 +14,7 @@ class Upload extends BaseHandler
     public function handle(): ResponseInterface
     {
         if ($this->app->request->getAttribute('uploadSecret') !== $this->uploadSecret) {
-            return $this->app->response->withStatus(401);
+            return new EmptyResponse(401);
         }
 
         $upload = new UploadComponent;
@@ -21,6 +23,6 @@ class Upload extends BaseHandler
         $upload->files = $this->app->request->getUploadedFiles();
         $upload->urls = $this->app->request->getParsedBody()['urls'] ?? null;
 
-        return $this->app->response->withJson($upload->getFiles());
+        return new JsonResponse($upload->getFiles());
     }
 }
