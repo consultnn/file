@@ -2,6 +2,7 @@
 
 namespace components;
 
+use components\params\LegacyParamsSetter;
 use helpers\FileHelper;
 use Imagine\File\Loader;
 use Laminas\Diactoros\UploadedFile;
@@ -33,10 +34,9 @@ class Upload
 
     /**
      * Сохраняем временный файл в хранилище проекта (storage) по пути вида "storage/project/firstDir/secondDir/filename.extension"
-     * @param UploadedFile $uploadedFile
      * @return boolean|string false при ошибках, uri при успешном сохранении.
      */
-    public function saveFile($uploadedFile)
+    public function saveFile(UploadedFile $uploadedFile)
     {
         if ($this->hasErrors($uploadedFile)) {
             return false;
@@ -75,7 +75,9 @@ class Upload
         $extension = $params['f'];
         $tempFile = RUNTIME_DIR . uniqid('_upload') . '.' . $extension;
 
-        $image = new Image($fileName, $params, $extension);
+        $image = new Image($fileName, $extension);
+        $paramsSetter = new LegacyParamsSetter($params);
+        $paramsSetter->apply($image);
         $image->generateImage()->save($tempFile, $image->options);
 
         return [

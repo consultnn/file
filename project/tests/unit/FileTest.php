@@ -4,6 +4,7 @@ namespace tests\unit;
 
 use components\Filesystem;
 use components\Image;
+use components\params\LegacyParamsSetter;
 use PHPUnit\Framework\TestCase;
 use tests\helpers\File;
 
@@ -79,7 +80,9 @@ class FileTest extends TestCase
     public function testWatermark()
     {
         $tempFile = \tests\helpers\File::copyFileToTemp('свободу сократу.png');
-        $image = new Image($tempFile, ['wm' => true, 'w' => 500, 'aoe' => 1], pathinfo($tempFile, PATHINFO_EXTENSION));
+        $paramsSetter = new LegacyParamsSetter(['wm' => true, 'w' => 500, 'aoe' => 1]);
+        $image = new Image($tempFile, pathinfo($tempFile, PATHINFO_EXTENSION));
+        $paramsSetter->apply($image);
         $this->assertEquals(true, $image->watermark);
 
         $image->watermarkConfig = [

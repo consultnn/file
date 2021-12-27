@@ -12,6 +12,7 @@ interface ParamsSetter
     public const FORMAT_JPEG = 'jpeg';
     public const FORMAT_PNG = 'png';
 
-    public function __construct(Image $image, array $params);
-    public function apply(): void;
+    public function __construct(array $params);
+    public function apply(Image $image): void;
+    public function noTransform(): bool;
 }

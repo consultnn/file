@@ -22,22 +22,16 @@ use Psr\Http\Message\StreamInterface;
  */
 class Image
 {
-    const GIPER = 'gipernn';
-    const DOMOSTROY = 'dom';
-    const DOMOSTROYDON = 'domdon';
-
     /** @var \Imagine\Image\ImageInterface */
     public $sourceImage;
     /** @var array */
-    public $options;
+    public $options = [];
     /** @var int  */
     public $quality = ParamsSetter::QUALITY_DEFAULT;
     /** @var string */
     public $format;
     /** @var string */
     public $crop;
-    /** @var array */
-    public $params;
     /** @var integer */
     public $width;
     /** @var integer */
@@ -48,24 +42,21 @@ class Image
     public $background;
     /** @var bool */
     public $aoe;
-    /** @var string */
+    /** @var bool */
     public $watermark;
     /** @var bool */
     public $autoRotate;
     /** @var string */
     public $savePath;
     /** @var array */
-    public $watermarkConfig;
+    public $watermarkConfig = [];
     /** @var string */
     public $setTransparentColor;
 
-    public function __construct($path, $params, $extension)
+    public function __construct(string $path, string $extension)
     {
         $this->sourceImage = (new Imagine)->open($path);
-        $this->params = $params;
         $this->format = $extension;
-        $converter = new LegacyParamsSetter($this, $params);
-        $converter->apply();
     }
 
     public function show(): StreamInterface
@@ -74,6 +65,11 @@ class Image
         $image = $this->generateImage();
         $image->save($this->savePath, $this->options);
         return new Stream($this->savePath);
+    }
+
+    public function setOption(string $key, $value): void
+    {
+        $this->options[$key] = $value;
     }
 
     public function generateImage(): ImageInterface

@@ -3,6 +3,7 @@
 namespace handlers;
 
 use components\Image as ComponentImage;
+use components\params\LegacyParamsSetter;
 use FileResponse;
 use helpers\FileHelper;
 use Laminas\Diactoros\Response\EmptyResponse;
@@ -53,22 +54,25 @@ class Image extends BaseHandler
             && in_array($physicalExtension, self::SOURCE_IMAGE_EXTENSIONS)
         ) {
             $params = FileHelper::internalDecodeParams($params);
-            /** TODO проверку, нужна ли перекодировка вынести в ComponentImage */
+            if ($this->app->project === 'gipernn'
+                && !array_key_exists('wm', $params)
+            ) {
+                /** TODO тест на добавление водяных знаков */
+                $params['wm'] = true;
+            }
+
+            $paramsSetter = new LegacyParamsSetter($params);
             if (($extension === $physicalExtension)
-                && ((count($params) === 0)
-                    || (count($params) === 1 && (isset($params['wm'])) && ($params['wm'] === '0'))
-                )
+                && $paramsSetter->noTransform()
             ) {
                 return new FileResponse(new Stream($physicalPath), $title);
             }
 
             $filesystem->createDirectory($filesystem->cachePath);
             
-            $image = new ComponentImage($physicalPath, $params, $extension);
+            $image = new ComponentImage($physicalPath, $extension);
+            $paramsSetter->apply($image);
             $image->savePath = $filesystem->cacheFile;
-            if ($this->app->project === 'gipernn' && !isset($params['wm'])) {
-                $image->watermark = true;
-            }
             $image->watermarkConfig = $this->watermark;
             return new FileResponse($image->show(), $title);
         } elseif ($extension === $physicalExtension) {
