@@ -75,7 +75,8 @@ class Image extends BaseHandler
             $image->savePath = $filesystem->cacheFile;
             $image->watermarkConfig = $this->watermark;
             return new FileResponse($image->show(), $title);
-        } elseif ($extension === $physicalExtension) {
+        }
+        if ($extension === $physicalExtension) {
             return new FileResponse(new Stream($physicalPath), $title, 'attachment');
         }
 

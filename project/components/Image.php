@@ -6,15 +6,13 @@ use components\filters\Crop;
 use components\filters\ForceAspectRatio;
 use components\filters\Resize;
 use components\filters\TransparentColor;
-use components\params\LegacyParamsSetter;
 use components\params\ParamsSetter;
 use Imagine\Filter\Basic\Autorotate;
 use Imagine\Image\ImageInterface;
 use Imagine\Imagick\Imagine;
+//use Imagine\Vips\Imagine;
 use Laminas\Diactoros\Stream;
 use Psr\Http\Message\StreamInterface;
-
-//use Imagine\Vips\Imagine;
 
 /**
  * Class Image

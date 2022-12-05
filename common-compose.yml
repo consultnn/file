@@ -1,7 +1,7 @@
 version: '2'
 services:
   nginx:
-    image: nginx:1.9.6
+    image: nginx:1.20-alpine
     volumes:
     - ./project:/www
     - ./docker/nginx/conf.d:/etc/nginx/conf.d

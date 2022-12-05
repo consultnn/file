@@ -1,18 +1,16 @@
-FROM php:7.4.18-fpm-alpine
+FROM php:8.1-fpm-alpine
 
 RUN apk upgrade --update \
     && set -xe \
     && apk add --no-cache \
            imagemagick \
-           imagemagick-dev \
            libtool \
-           gmp-dev \
+           libgomp \
 #           vips-dev \
-    && apk add --no-cache --virtual .build-deps $PHPIZE_DEPS \
-    && pecl install imagick-3.4.4 \
-#    && pecl install vips-1.0.10 \
+    && apk add --no-cache --virtual .build-deps $PHPIZE_DEPS imagemagick-dev gmp-dev libffi-dev \
+    && pecl install imagick-3.6.0 \
     && docker-php-ext-enable imagick \
-    && docker-php-ext-install gmp exif \
+    && docker-php-ext-install gmp exif ffi \
     && apk del .build-deps \
     && curl -sS https://getcomposer.org/installer \
     | php -- --install-dir=/usr/local/bin --filename=composer
